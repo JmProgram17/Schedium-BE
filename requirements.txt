@@ -1,0 +1,36 @@
+# FastAPI Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# Database
+SQLAlchemy==2.0.25
+PyMySQL==1.1.0
+cryptography==42.0.0
+
+# Validation & Serialization
+pydantic==2.5.3
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# Security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.6
+
+# Environment Variables
+python-dotenv==1.0.0
+
+# Date handling
+python-dateutil==2.8.2
+
+# CORS
+fastapi-cors==0.0.6
+
+# Logging
+python-json-logger==2.0.7
+
+# HTTP Client (for external APIs if needed)
+httpx==0.26.0
+
+# Performance
+orjson==3.9.10
