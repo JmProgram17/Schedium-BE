@@ -6,8 +6,6 @@ Handles business logic for authentication and authorization.
 from typing import Optional, Tuple
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
-from jose import JWTError, jwt
 
 from app.config import settings
 from app.models.auth import User, Role
@@ -21,10 +19,8 @@ from app.core.exceptions import (
     NotFoundException, BadRequestException,
     UnauthorizedException, ConflictException
 )
+from app.core.security import SecurityUtils
 from app.core.pagination import PaginationParams, Page
-
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class AuthService:
@@ -35,59 +31,23 @@ class AuthService:
         self.user_repo = UserRepository(db)
         self.role_repo = RoleRepository(db)
     
-    # Password utilities
-    @staticmethod
-    def verify_password(plain_password: str, hashed_password: str) -> bool:
-        """Verify a password against its hash."""
-        return pwd_context.verify(plain_password, hashed_password)
-    
-    @staticmethod
-    def get_password_hash(password: str) -> str:
-        """Generate password hash."""
-        return pwd_context.hash(password)
-    
-    # Token utilities
-    def create_access_token(self, user_id: int) -> str:
-        """Create JWT access token."""
-        user = self.user_repo.get(user_id)
-        if not user:
-            raise NotFoundException("User not found")
-        
-        payload = {
-            "sub": str(user.user_id),
-            "email": user.email,
-            "role": user.role.name if user.role else None,
-            "exp": datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        }
-        
-        return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    
-    def create_refresh_token(self, user_id: int) -> str:
-        """Create JWT refresh token."""
-        payload = {
-            "sub": str(user_id),
-            "type": "refresh",
-            "exp": datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
-        }
-        
-        return jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    
-    def create_tokens(self, user_id: int) -> Token:
-        """Create both access and refresh tokens."""
-        return Token(
-            access_token=self.create_access_token(user_id),
-            refresh_token=self.create_refresh_token(user_id),
-            token_type="bearer"
-        )
-    
-    # Authentication
+    # Authentication methods
     def authenticate_user(self, email: str, password: str) -> Optional[User]:
-        """Authenticate user with email and password."""
+        """
+        Authenticate user with email and password.
+        
+        Args:
+            email: User email
+            password: Plain text password
+            
+        Returns:
+            User object if authenticated, None otherwise
+        """
         user = self.user_repo.get_by_email(email)
         if not user:
             return None
         
-        if not self.verify_password(password, user.password):
+        if not SecurityUtils.verify_password(password, user.password):
             return None
         
         if not user.active:
@@ -101,19 +61,72 @@ class AuthService:
         
         return user
     
-    def verify_token(self, token: str) -> dict:
-        """Verify and decode JWT token."""
+    def create_tokens(self, user_id: int) -> Token:
+        """
+        Create access and refresh tokens for user.
+        
+        Args:
+            user_id: User ID
+            
+        Returns:
+            Token object with access and refresh tokens
+        """
+        user = self.user_repo.get(user_id)
+        if not user:
+            raise NotFoundException("User not found")
+        
+        # Token payload
+        token_data = {
+            "sub": str(user.user_id),
+            "email": user.email,
+            "role": user.role.name if user.role else None,
+            "full_name": user.full_name
+        }
+        
+        # Create tokens
+        access_token = SecurityUtils.create_access_token(data=token_data)
+        refresh_token = SecurityUtils.create_refresh_token(data={"sub": str(user.user_id)})
+        
+        return Token(
+            access_token=access_token,
+            refresh_token=refresh_token,
+            token_type="bearer"
+        )
+    
+    def refresh_access_token(self, refresh_token: str) -> Token:
+        """
+        Refresh access token using refresh token.
+        
+        Args:
+            refresh_token: Refresh token
+            
+        Returns:
+            New token pair
+            
+        Raises:
+            UnauthorizedException: If refresh token is invalid
+        """
         try:
-            payload = jwt.decode(
-                token,
-                settings.SECRET_KEY,
-                algorithms=[settings.ALGORITHM]
-            )
-            return payload
-        except JWTError:
+            # Decode refresh token
+            payload = SecurityUtils.decode_token(refresh_token)
+            
+            # Verify it's a refresh token
+            if not SecurityUtils.verify_token_type(payload, "refresh"):
+                raise UnauthorizedException(
+                    detail="Invalid token type",
+                    error_code="INVALID_TOKEN_TYPE"
+                )
+            
+            # Get user ID
+            user_id = int(payload.get("sub"))
+            
+            # Create new tokens
+            return self.create_tokens(user_id)
+            
+        except Exception as e:
             raise UnauthorizedException(
-                detail="Invalid token",
-                error_code="INVALID_TOKEN"
+                detail="Invalid refresh token",
+                error_code="INVALID_REFRESH_TOKEN"
             )
     
     # User operations
@@ -141,7 +154,7 @@ class AuthService:
         
         # Hash password
         user_data = user_in.model_dump()
-        user_data["password"] = self.get_password_hash(user_data["password"])
+        user_data["password"] = SecurityUtils.get_password_hash(user_data["password"])
         
         # Create user
         user = self.user_repo.create(obj_in=UserCreate(**user_data))
@@ -189,7 +202,7 @@ class AuthService:
         # Hash password if provided
         update_data = user_in.model_dump(exclude_unset=True)
         if "password" in update_data:
-            update_data["password"] = self.get_password_hash(update_data["password"])
+            update_data["password"] = SecurityUtils.get_password_hash(update_data["password"])
         
         # Update user
         user = self.user_repo.update(db_obj=user, obj_in=update_data)
@@ -199,14 +212,15 @@ class AuthService:
         """Delete user."""
         user = self.user_repo.get_or_404(user_id)
         
-        # Don't delete users with admin role
+        # Don't delete users with admin role if they're the last admin
         if user.role and user.role.name == "Administrator":
             admin_count = self.db.query(User).join(Role).filter(
                 Role.name == "Administrator",
-                User.active == True
+                User.active == True,
+                User.user_id != user_id
             ).count()
             
-            if admin_count <= 1:
+            if admin_count == 0:
                 raise BadRequestException(
                     detail="Cannot delete the last administrator",
                     error_code="LAST_ADMIN"
@@ -219,14 +233,70 @@ class AuthService:
         user = self.user_repo.get_or_404(user_id)
         
         # Verify current password
-        if not self.verify_password(current_password, user.password):
+        if not SecurityUtils.verify_password(current_password, user.password):
             raise BadRequestException(
                 detail="Current password is incorrect",
                 error_code="INVALID_PASSWORD"
             )
         
         # Update password
-        user.password = self.get_password_hash(new_password)
+        user.password = SecurityUtils.get_password_hash(new_password)
+        self.db.commit()
+        
+        return True
+    
+    def reset_password(self, email: str) -> str:
+        """
+        Generate password reset token.
+        
+        Args:
+            email: User email
+            
+        Returns:
+            Reset token
+            
+        Raises:
+            NotFoundException: If user not found
+        """
+        user = self.user_repo.get_by_email(email)
+        if not user:
+            raise NotFoundException(
+                detail="User with this email not found",
+                error_code="USER_NOT_FOUND"
+            )
+        
+        return SecurityUtils.generate_password_reset_token(email)
+    
+    def confirm_reset_password(self, token: str, new_password: str) -> bool:
+        """
+        Reset password using reset token.
+        
+        Args:
+            token: Reset token
+            new_password: New password
+            
+        Returns:
+            True if successful
+            
+        Raises:
+            BadRequestException: If token is invalid
+        """
+        email = SecurityUtils.verify_password_reset_token(token)
+        if not email:
+            raise BadRequestException(
+                detail="Invalid or expired reset token",
+                error_code="INVALID_RESET_TOKEN"
+            )
+        
+        user = self.user_repo.get_by_email(email)
+        if not user:
+            raise NotFoundException(
+                detail="User not found",
+                error_code="USER_NOT_FOUND"
+            )
+        
+        # Update password
+        user.password = SecurityUtils.get_password_hash(new_password)
         self.db.commit()
         
         return True
@@ -259,6 +329,14 @@ class AuthService:
                     detail=f"Role {role_in.name} already exists",
                     error_code="ROLE_EXISTS"
                 )
+        
+        # Don't allow renaming system roles
+        system_roles = ["Administrator", "Coordinator", "Secretary"]
+        if role.name in system_roles and role_in.name and role_in.name != role.name:
+            raise BadRequestException(
+                detail="Cannot rename system roles",
+                error_code="SYSTEM_ROLE_RENAME"
+            )
         
         role = self.role_repo.update(db_obj=role, obj_in=role_in)
         return RoleSchema.model_validate(role)

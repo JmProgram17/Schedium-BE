@@ -3,8 +3,8 @@ Common dependencies used across the application.
 Provides reusable dependencies for dependency injection.
 """
 
-from typing import Generator, Optional
-from fastapi import Depends, HTTPException, status, Header
+from typing import Generator, Optional, Annotated
+from fastapi import Depends, HTTPException, status, Header, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from jose import JWTError, jwt
@@ -12,7 +12,8 @@ from datetime import datetime
 
 from app.database import SessionLocal
 from app.config import settings
-from app.core.exceptions import UnauthorizedException
+from app.core.exceptions import UnauthorizedException, ForbiddenException
+from app.core.security import SecurityUtils
 from app.models.auth import User
 from app.repositories.auth import UserRepository
 
@@ -37,8 +38,8 @@ def get_db() -> Generator[Session, None, None]:
 
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+    token: Annotated[str, Depends(oauth2_scheme)],
+    db: Annotated[Session, Depends(get_db)]
 ) -> User:
     """
     Get current authenticated user from JWT token.
@@ -60,16 +61,18 @@ async def get_current_user(
     
     try:
         # Decode JWT token
-        payload = jwt.decode(
-            token,
-            settings.SECRET_KEY,
-            algorithms=[settings.ALGORITHM]
-        )
-        user_id: int = payload.get("sub")
+        payload = SecurityUtils.decode_token(token)
+        
+        # Verify token type
+        if not SecurityUtils.verify_token_type(payload, "access"):
+            raise credentials_exception
+        
+        # Get user ID from token
+        user_id: str = payload.get("sub")
         if user_id is None:
             raise credentials_exception
-            
-        # Check token expiration
+        
+        # Check token expiration (already checked in decode, but double-check)
         exp = payload.get("exp")
         if exp and datetime.utcfromtimestamp(exp) < datetime.utcnow():
             raise UnauthorizedException(
@@ -79,25 +82,25 @@ async def get_current_user(
             
     except JWTError:
         raise credentials_exception
+    except Exception:
+        raise credentials_exception
     
     # Get user from database
     user_repo = UserRepository(db)
-    user = user_repo.get(user_id)
+    user = user_repo.get(int(user_id))
     
     if user is None:
         raise credentials_exception
-        
-    if not user.active:
-        raise UnauthorizedException(
-            detail="User account is inactive",
-            error_code="INACTIVE_USER"
-        )
+    
+    # Load user role relationship
+    if user.role:
+        _ = user.role.name  # Force load
     
     return user
 
 
 async def get_current_active_user(
-    current_user: User = Depends(get_current_user)
+    current_user: Annotated[User, Depends(get_current_user)]
 ) -> User:
     """
     Get current active user.
@@ -130,19 +133,18 @@ def require_role(allowed_roles: list[str]):
         Dependency function that validates user role
     """
     async def role_checker(
-        current_user: User = Depends(get_current_active_user)
+        current_user: Annotated[User, Depends(get_current_active_user)]
     ) -> User:
         if not current_user.role:
-            raise UnauthorizedException(
+            raise ForbiddenException(
                 detail="User has no role assigned",
                 error_code="NO_ROLE"
             )
             
         if current_user.role.name not in allowed_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Role '{current_user.role.name}' not allowed. Required roles: {', '.join(allowed_roles)}",
-                headers={"WWW-Authenticate": "Bearer"},
+            raise ForbiddenException(
+                detail=f"Insufficient permissions. Required roles: {', '.join(allowed_roles)}",
+                error_code="INSUFFICIENT_PERMISSIONS"
             )
         return current_user
     
@@ -155,8 +157,26 @@ require_coordinator = require_role(["Administrator", "Coordinator"])
 require_any_role = require_role(["Administrator", "Coordinator", "Secretary"])
 
 
+async def get_current_user_optional(
+    token: Annotated[Optional[str], Depends(oauth2_scheme)] = None,
+    db: Annotated[Session, Depends(get_db)] = None
+) -> Optional[User]:
+    """
+    Get current user if authenticated, None otherwise.
+    
+    Useful for endpoints that work for both authenticated and anonymous users.
+    """
+    if not token:
+        return None
+    
+    try:
+        return await get_current_user(token, db)
+    except:
+        return None
+
+
 async def get_request_id(
-    x_request_id: Optional[str] = Header(None, alias="X-Request-ID")
+    x_request_id: Annotated[Optional[str], Header(alias="X-Request-ID")] = None
 ) -> Optional[str]:
     """
     Get request ID from header.
@@ -186,3 +206,33 @@ class CommonQueryParams:
         self.search = search
         self.sort_by = sort_by
         self.sort_order = sort_order.lower() if sort_order in ["asc", "desc"] else "asc"
+
+
+def verify_token_dependency(
+    token: Annotated[str, Depends(oauth2_scheme)]
+) -> dict:
+    """
+    Verify token and return payload.
+    
+    Args:
+        token: JWT token
+        
+    Returns:
+        Token payload
+        
+    Raises:
+        UnauthorizedException: If token is invalid
+    """
+    try:
+        payload = SecurityUtils.decode_token(token)
+        if not SecurityUtils.verify_token_type(payload, "access"):
+            raise UnauthorizedException(
+                detail="Invalid token type",
+                error_code="INVALID_TOKEN_TYPE"
+            )
+        return payload
+    except JWTError:
+        raise UnauthorizedException(
+            detail="Could not validate token",
+            error_code="INVALID_TOKEN"
+        )

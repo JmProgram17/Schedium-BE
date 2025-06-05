@@ -14,6 +14,8 @@ from contextlib import asynccontextmanager
 from app.config import settings
 from app.database import init_db
 
+from app.core.auth_middleware import AuthenticationMiddleware
+
 # Configure logging
 logging.basicConfig(
     level=getattr(logging, settings.LOG_LEVEL.upper()),
@@ -60,6 +62,8 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+app.add_middleware(AuthenticationMiddleware)
 
 # Add trusted host middleware for security
 app.add_middleware(
