@@ -5,7 +5,7 @@ Provides validation and serialization for auth domain.
 
 from typing import Optional
 from datetime import datetime
-from pydantic import Field, EmailStr, validator, field_validator
+from pydantic import Field, EmailStr, validator, field_validator, model_validator
 from app.schemas.common import BaseSchema, TimestampSchema
 
 
@@ -92,12 +92,11 @@ class User(UserInDB):
     role: Optional[Role] = Field(None, description="User role")
     full_name: str = Field(..., description="Full name")
     
-    @classmethod
-    def from_orm(cls, obj):
-        """Custom from_orm to add computed fields."""
-        data = super().from_orm(obj)
-        data.full_name = f"{obj.first_name} {obj.last_name}"
-        return data
+    @model_validator(mode='after')
+    def add_full_name(self) -> 'User':
+        """Add computed full name."""
+        self.full_name = f"{self.first_name} {self.last_name}"
+        return self
 
 
 class UserWithoutPassword(User):

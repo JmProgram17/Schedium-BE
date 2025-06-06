@@ -498,6 +498,21 @@ class SchedulingService:
                 conflict_type=conflict.conflict_type
             )
         
+        # Validar que el instructor no exceda su límite de horas
+        instructor = self.instructor_repo.get(schedule_in.instructor_id)
+        if instructor and instructor.contract and instructor.contract.hour_limit:
+            dtb = self.day_time_block_repo.get_with_relations(schedule_in.day_time_block_id)
+            if dtb:
+                hours_to_add = dtb.time_block.duration_minutes / 60
+                total_hours = float(instructor.hour_count) + hours_to_add
+                
+                if total_hours > instructor.contract.hour_limit:
+                    raise InstructorOverloadException(
+                        instructor_name=instructor.full_name,
+                        current_hours=float(instructor.hour_count),
+                        limit=instructor.contract.hour_limit
+                    )
+        
         # Create schedule
         schedule = self.class_schedule_repo.create(obj_in=schedule_in)
         
@@ -507,6 +522,35 @@ class SchedulingService:
         schedule = self.class_schedule_repo.get_with_relations(schedule.class_schedule_id)
         return ClassScheduleDetailed.model_validate(schedule)
     
+
+    def create_class_schedule(self, schedule_in: ClassScheduleCreate) -> ClassScheduleDetailed:
+        """Create a new class schedule."""
+        # Validate all foreign keys
+        self.quarter_repo.get_or_404(schedule_in.quarter_id)
+        self.day_time_block_repo.get_or_404(schedule_in.day_time_block_id)
+        self.group_repo.get_or_404(schedule_in.group_id)
+        self.instructor_repo.get_or_404(schedule_in.instructor_id)
+        self.classroom_repo.get_or_404(schedule_in.classroom_id)
+
+        # Validate for conflicts
+        validation = self.validate_schedule(schedule_in)
+        if not validation.is_valid:
+            conflict = validation.conflicts[0]
+            raise ScheduleConflictException(
+                detail=f"{conflict.conflict_type.title()} conflict: {conflict.resource_name} "
+                       f"already has '{conflict.existing_subject}' at this time",
+                conflict_type=conflict.conflict_type
+            )
+
+        # Create schedule
+        schedule = self.class_schedule_repo.create(obj_in=schedule_in)
+
+        # The database trigger will handle updating instructor hours
+
+        # Get with relations and return
+        schedule = self.class_schedule_repo.get_with_relations(schedule.class_schedule_id)
+        return ClassScheduleDetailed.model_validate(schedule)
+
     def get_class_schedule(self, class_schedule_id: int) -> ClassScheduleDetailed:
         """Get class schedule by ID."""
         schedule = self.class_schedule_repo.get_with_relations(class_schedule_id)

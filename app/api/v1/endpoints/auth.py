@@ -3,10 +3,12 @@ Authentication endpoints.
 Handles login, logout, token refresh, and user management.
 """
 
+from app.config import settings
 from typing import List, Optional, Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Body, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+
 
 from app.api.deps import (
     get_db, get_current_user, get_current_active_user,

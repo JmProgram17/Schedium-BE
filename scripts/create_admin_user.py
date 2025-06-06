@@ -16,7 +16,22 @@ from app.database import SessionLocal
 from app.services.auth import AuthService
 from app.schemas.auth import UserCreate
 from app.repositories.auth import RoleRepository
+from sqlalchemy.orm import Session
 
+def list_existing_users(db: Session):
+    """List existing admin users."""
+    from app.models.auth import User, Role
+    
+    admins = db.query(User).join(Role).filter(
+        Role.name == "Administrator"
+    ).all()
+    
+    if admins:
+        print("\n📋 Existing administrators:")
+        for admin in admins:
+            print(f"   - {admin.full_name} ({admin.email})")
+    else:
+        print("\n⚠️  No administrators found in the system")
 
 def create_admin_user():
     """Create initial admin user."""
