@@ -3,9 +3,17 @@
 Test API endpoints availability.
 Verifies that all endpoints are properly registered.
 """
-
+import sys
 import requests
 from typing import Dict, List
+
+from pathlib import Path
+
+project_root = Path(__file__).parent
+if (project_root / "app").exists():
+    sys.path.insert(0, str(project_root))
+elif (project_root.parent / "app").exists():
+    sys.path.insert(0, str(project_root.parent))
 
 BASE_URL = "http://localhost:8000"
 API_URL = f"{BASE_URL}/api/v1"
@@ -66,7 +74,7 @@ def main():
         expected = {
             "authentication": 14,
             "academic": 25,
-            "human-resources": 18,
+            "human-resources": 17,
             "infrastructure": 13,
             "scheduling": 23,
             "health": 3

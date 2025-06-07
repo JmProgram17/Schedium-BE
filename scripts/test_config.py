@@ -1,4 +1,13 @@
 # test_config.py - Crear en la raíz del proyecto para probar
+import sys
+from pathlib import Path
+
+project_root = Path(__file__).parent
+if (project_root / "app").exists():
+    sys.path.insert(0, str(project_root))
+elif (project_root.parent / "app").exists():
+    sys.path.insert(0, str(project_root.parent))
+
 from app.config import settings
 
 def test_database_url():

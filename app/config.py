@@ -9,6 +9,16 @@ from pydantic import field_validator, ValidationInfo
 import secrets
 import os
 import platform
+import locale
+import sys
+
+# Configure UTF-8 output for Windows
+if platform.system() == "Windows":
+    # Set console encoding to UTF-8
+    if sys.stdout.encoding != 'utf-8':
+        sys.stdout.reconfigure(encoding='utf-8')
+    if sys.stderr.encoding != 'utf-8':
+        sys.stderr.reconfigure(encoding='utf-8')
 
 
 class Settings(BaseSettings):

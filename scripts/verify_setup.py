@@ -8,9 +8,11 @@ import os
 import platform
 from pathlib import Path
 
-# Add project root to path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
+project_root = Path(__file__).parent
+if (project_root / "app").exists():
+    sys.path.insert(0, str(project_root))
+elif (project_root.parent / "app").exists():
+    sys.path.insert(0, str(project_root.parent))
 
 
 def main():

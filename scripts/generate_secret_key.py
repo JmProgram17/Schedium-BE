@@ -2,10 +2,17 @@
 """
 Generate a secure secret key for the application.
 """
-
+import sys
 import secrets
 import string
 
+from pathlib import Path
+
+project_root = Path(__file__).parent
+if (project_root / "app").exists():
+    sys.path.insert(0, str(project_root))
+elif (project_root.parent / "app").exists():
+    sys.path.insert(0, str(project_root.parent))
 
 def generate_secret_key(length=32):
     """Generate a cryptographically secure secret key."""

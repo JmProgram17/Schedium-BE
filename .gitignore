@@ -151,3 +151,8 @@ Thumbs.db
 logs/
 uploads/
 temp/
+
+# Alembic
+alembic/versions/*.pyc
+alembic/versions/__pycache__/
+# No ignorar los archivos de migración .py

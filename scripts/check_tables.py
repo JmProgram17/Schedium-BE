@@ -2,11 +2,19 @@
 """
 Script para verificar todas las tablas y vistas en la base de datos.
 """
-
+import sys
 from sqlalchemy import text
+from tabulate import tabulate
+from pathlib import Path
+
+project_root = Path(__file__).parent
+if (project_root / "app").exists():
+    sys.path.insert(0, str(project_root))
+elif (project_root.parent / "app").exists():
+    sys.path.insert(0, str(project_root.parent))
+
 from app.database import engine
 from app.config import settings
-from tabulate import tabulate
 
 def check_database_structure():
     """Verificar estructura completa de la base de datos."""

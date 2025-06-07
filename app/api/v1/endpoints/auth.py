@@ -2,7 +2,7 @@
 Authentication endpoints.
 Handles login, logout, token refresh, and user management.
 """
-
+from app.config import settings
 from typing import List, Optional, Annotated
 from fastapi import APIRouter, Depends, HTTPException, status, Body, BackgroundTasks
 from fastapi.security import OAuth2PasswordRequestForm
@@ -20,6 +20,7 @@ from app.schemas.auth import (
     Token, LoginRequest, ChangePasswordRequest
 )
 from app.services.auth import AuthService
+from app.core.exceptions import NotFoundException  # Add this import if NotFoundException is defined here
 
 router = APIRouter()
 

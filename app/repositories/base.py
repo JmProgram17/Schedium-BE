@@ -6,9 +6,8 @@ Implements the Repository pattern for data access.
 from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import and_, or_, func
+from sqlalchemy import and_, or_, func, inspect
 from fastapi.encoders import jsonable_encoder
-
 from app.database import Base
 from app.core.exceptions import NotFoundException, ConflictException
 from app.core.pagination import PaginationParams, Page, paginate
@@ -39,7 +38,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
         self.db = db
     
-    def get(self, id: Any) -> Optional[ModelType]:
+    def get(self, id: Any) -> Optional[Any]:
         """
         Get a single record by ID.
         
@@ -49,7 +48,10 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         Returns:
             Model instance or None
         """
-        return self.db.query(self.model).filter(self.model.id == id).first()
+        # Los modelos tienen diferentes nombres de primary key
+        mapper = inspect(self.model)
+        pk = mapper.primary_key[0]
+        return self.db.query(self.model).filter(pk == id).first()
     
     def get_or_404(self, id: Any) -> ModelType:
         """

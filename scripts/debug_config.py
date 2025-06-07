@@ -8,15 +8,17 @@ import os
 import sys
 from pathlib import Path
 
-# Add project root to path
-project_root = Path(__file__).parent.parent
-sys.path.insert(0, str(project_root))
+project_root = Path(__file__).parent
+if (project_root / "app").exists():
+    sys.path.insert(0, str(project_root))
+elif (project_root.parent / "app").exists():
+    sys.path.insert(0, str(project_root.parent))
 
 
 def debug_env_file():
     """Debug .env file parsing."""
     print("🔍 Debugging .env file...")
-    env_path = project_root / ".env"
+    env_path = project_root.parent / ".env" 
     
     if not env_path.exists():
         print("❌ .env file not found!")

@@ -498,6 +498,20 @@ class SchedulingService:
                 conflict_type=conflict.conflict_type
             )
         
+        instructor = self.instructor_repo.get(schedule_in.instructor_id)
+        if instructor and instructor.contract and instructor.contract.hour_limit:
+                dtb = self.day_time_block_repo.get_with_relations(schedule_in.day_time_block_id)
+                if dtb:
+                    hours_to_add = dtb.time_block.duration_minutes / 60
+                    total_hours = float(instructor.hour_count) + hours_to_add
+                    
+                    if total_hours > instructor.contract.hour_limit:
+                        raise InstructorOverloadException(
+                            instructor_name=instructor.full_name,
+                            current_hours=float(instructor.hour_count),
+                            limit=instructor.contract.hour_limit
+                        )
+
         # Create schedule
         schedule = self.class_schedule_repo.create(obj_in=schedule_in)
         

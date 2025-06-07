@@ -82,7 +82,7 @@ def paginate(
     
     # Serialize if response model provided
     if response_model:
-        items = [response_model.from_orm(item) for item in items]
+        items = [response_model.model_validate(item) for item in items]
     
     return Page(
         items=items,

@@ -3,11 +3,18 @@
 Test SQLAlchemy models mapping.
 Verifies all tables are correctly mapped.
 """
-
+import sys
 from sqlalchemy import inspect
+from pathlib import Path
+
+project_root = Path(__file__).parent
+if (project_root / "app").exists():
+    sys.path.insert(0, str(project_root))
+elif (project_root.parent / "app").exists():
+    sys.path.insert(0, str(project_root.parent))
+
 from app.database import engine, Base
 from app.models import auth, academic, hr, infrastructure, scheduling
-
 
 def test_models_mapping():
     """Test that all models are correctly mapped to database tables."""
