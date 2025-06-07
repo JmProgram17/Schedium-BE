@@ -4,7 +4,7 @@ Provides reusable components for all models.
 """
 
 from datetime import datetime
-from sqlalchemy import Column, DateTime, Boolean, Integer
+from sqlalchemy import Column, DateTime, Boolean
 from sqlalchemy.ext.declarative import declared_attr
 from app.database import Base
 

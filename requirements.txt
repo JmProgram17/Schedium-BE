@@ -1,6 +1,7 @@
 # FastAPI Framework
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
+gunicorn==21.2.0
 
 # Database
 SQLAlchemy==2.0.25
@@ -38,4 +39,3 @@ httpx==0.26.0
 
 # Performance
 orjson==3.9.10
-

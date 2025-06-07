@@ -4,7 +4,7 @@ Provides consistent pagination across the application.
 """
 
 from typing import Generic, List, Optional, TypeVar, Dict, Any
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Query
 from sqlalchemy import func
 from math import ceil
@@ -21,7 +21,7 @@ class PaginationParams(BaseModel):
     page: int = Field(1, ge=1, description="Page number")
     page_size: int = Field(settings.DEFAULT_PAGE_SIZE, ge=1, le=settings.MAX_PAGE_SIZE)
     
-    @validator("page_size")
+    @field_validator("page_size")
     def validate_page_size(cls, v: int) -> int:
         """Ensure page size is within allowed limits."""
         if v > settings.MAX_PAGE_SIZE:
@@ -152,4 +152,4 @@ class FilterParams(BaseModel):
     
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary excluding None values."""
-        return {k: v for k, v in self.dict().items() if v is not None}
+        return {k: v for k, v in self.model_dump().items() if v is not None}

@@ -37,6 +37,8 @@ def get_db() -> Generator[Session, None, None]:
         db.close()
 
 
+# Solo la función corregida:
+
 async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[Session, Depends(get_db)]
@@ -92,9 +94,9 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     
-    # Load user role relationship
+    # Ensure role is loaded
     if user.role:
-        _ = user.role.name  # Force load
+        _ = user.role.name  # Force load the relationship
     
     return user
 

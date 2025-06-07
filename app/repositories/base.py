@@ -7,7 +7,6 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import and_, or_, func, inspect
-from sqlalchemy import and_, or_, func, inspect
 from fastapi.encoders import jsonable_encoder
 from app.database import Base
 from app.core.exceptions import NotFoundException, ConflictException
@@ -39,7 +38,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         self.model = model
         self.db = db
     
-    def get(self, id: Any) -> Optional[Any]:
+    def get(self, id: Any) -> Optional[ModelType]:
         """
         Get a single record by ID.
         
@@ -49,10 +48,10 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         Returns:
             Model instance or None
         """
-        # Los modelos tienen diferentes nombres de primary key
+        # Get primary key dynamically
         mapper = inspect(self.model)
-        pk = mapper.primary_key[0]
-        return self.db.query(self.model).filter(pk == id).first()
+        pk_column = mapper.primary_key[0]
+        return self.db.query(self.model).filter(pk_column == id).first()
     
     def get_or_404(self, id: Any) -> ModelType:
         """
@@ -206,7 +205,7 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if isinstance(obj_in, dict):
             update_data = obj_in
         else:
-            update_data = obj_in.dict(exclude_unset=True)
+            update_data = obj_in.model_dump(exclude_unset=True)
         
         for field in obj_data:
             if field in update_data:
@@ -249,14 +248,14 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         Returns:
             Number of records
         """
-        query = self.db.query(func.count(self.model.id))
+        query = self.db.query(self.model)
         
         if filters:
             for field, value in filters.items():
                 if hasattr(self.model, field):
                     query = query.filter(getattr(self.model, field) == value)
         
-        return query.scalar()
+        return query.count()
     
     def exists(self, **kwargs) -> bool:
         """

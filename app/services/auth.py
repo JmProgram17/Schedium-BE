@@ -179,6 +179,8 @@ class AuthService:
         page.items = [UserSchema.model_validate(user) for user in page.items]
         return page
     
+    # Solo el método corregido:
+
     def update_user(self, user_id: int, user_in: UserUpdate) -> UserSchema:
         """Update user."""
         user = self.user_repo.get_or_404(user_id)

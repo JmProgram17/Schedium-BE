@@ -137,8 +137,8 @@ class ChangePasswordRequest(BaseSchema):
     new_password: str = Field(..., min_length=8, description="New password")
     
     @field_validator('new_password')
-    def validate_new_password(cls, v: str, values) -> str:
+    def validate_new_password(cls, v: str, info) -> str:
         """Validate new password is different from current."""
-        if 'current_password' in values.data and v == values.data['current_password']:
+        if 'current_password' in info.data and v == info.data['current_password']:
             raise ValueError('New password must be different from current password')
         return v
