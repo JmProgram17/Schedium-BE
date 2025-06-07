@@ -53,6 +53,23 @@ def validate_document_number(document: str) -> bool:
     # Check length (6-20 characters)
     return 6 <= len(cleaned) <= 20
 
+def validate_colombian_document(document: str) -> bool:
+    """
+    Validate Colombian document (CC, CE, TI, etc).
+    """
+    # Remove non-numeric characters for CC
+    cleaned = re.sub(r'[^0-9]', '', document)
+    
+    # Colombian CC typically 6-10 digits
+    if cleaned.isdigit() and 6 <= len(cleaned) <= 10:
+        return True
+    
+    # CE format: letters and numbers
+    if re.match(r'^[A-Z]{2}\d{6,8}$', document.upper()):
+        return True
+    
+    return False
+
 
 def validate_date_range(start_date: date, end_date: date) -> bool:
     """

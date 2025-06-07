@@ -7,6 +7,7 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import and_, or_, func, inspect
+from sqlalchemy import and_, or_, func, inspect
 from fastapi.encoders import jsonable_encoder
 from app.database import Base
 from app.core.exceptions import NotFoundException, ConflictException

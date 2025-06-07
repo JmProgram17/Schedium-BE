@@ -514,13 +514,13 @@ class SchedulingService:
 
         # Create schedule
         schedule = self.class_schedule_repo.create(obj_in=schedule_in)
-        
+
         # The database trigger will handle updating instructor hours
-        
+
         # Get with relations and return
         schedule = self.class_schedule_repo.get_with_relations(schedule.class_schedule_id)
         return ClassScheduleDetailed.model_validate(schedule)
-    
+
     def get_class_schedule(self, class_schedule_id: int) -> ClassScheduleDetailed:
         """Get class schedule by ID."""
         schedule = self.class_schedule_repo.get_with_relations(class_schedule_id)
