@@ -4,7 +4,7 @@ Handles SQLAlchemy engine, session management, and base model.
 """
 
 import logging
-from typing import Generator
+from typing import Any, Generator
 
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.declarative import declarative_base
@@ -73,10 +73,10 @@ def init_db() -> None:
         logger.info("Database connection established successfully")
 
         # Log connection pool status
-        logger.info(f"Database pool size: {engine.pool.size()}")
+        logger.info(f"Database pool size: {engine.pool.size()}")  # type: ignore[misc]
         logger.info(
             f"Database pool checked out connections: {engine.pool.checkedout()}"
-        )
+        )  # type: ignore[misc]
 
     except Exception as e:
         logger.error(f"Failed to connect to database: {str(e)}")
@@ -85,19 +85,21 @@ def init_db() -> None:
 
 # Event listeners for connection pool monitoring
 @event.listens_for(engine, "connect")
-def receive_connect(dbapi_connection, connection_record):
+def receive_connect(dbapi_connection: Any, connection_record: Any) -> None:
     """Log new database connections."""
     logger.debug("New database connection established")
 
 
 @event.listens_for(engine, "checkout")
-def receive_checkout(dbapi_connection, connection_record, connection_proxy):
+def receive_checkout(
+    dbapi_connection: Any, connection_record: Any, connection_proxy: Any
+) -> None:
     """Log connection checkouts from pool."""
     logger.debug("Connection checked out from pool")
 
 
 @event.listens_for(engine, "checkin")
-def receive_checkin(dbapi_connection, connection_record):
+def receive_checkin(dbapi_connection: Any, connection_record: Any) -> None:
     """Log connection returns to pool."""
     logger.debug("Connection returned to pool")
 
@@ -106,7 +108,7 @@ def receive_checkin(dbapi_connection, connection_record):
 if "mysql" in settings.DATABASE_URL:
 
     @event.listens_for(engine, "connect")
-    def set_mysql_mode(dbapi_connection, connection_record):
+    def set_mysql_mode(dbapi_connection: Any, connection_record: Any) -> None:
         """Set MySQL specific modes for better compatibility."""
         cursor = dbapi_connection.cursor()
         # Enable ANSI quotes for identifier quoting

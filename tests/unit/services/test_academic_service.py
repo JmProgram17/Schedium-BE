@@ -153,7 +153,7 @@ class TestAcademicService:
     def test_update_nomenclature_code_conflict(self, academic_service):
         """Test updating nomenclature with conflicting code."""
         # Create two nomenclatures
-        nom1 = academic_service.create_nomenclature(
+        _ = academic_service.create_nomenclature(
             NomenclatureCreate(code="NOM1", description="First")
         )
         nom2 = academic_service.create_nomenclature(

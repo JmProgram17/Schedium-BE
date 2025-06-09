@@ -120,45 +120,24 @@ class SchedulingService:
         self, schedule_id: int, schedule_in: ScheduleUpdate
     ) -> ScheduleSchema:
         """Update schedule."""
-        schedule = self.schedule_repo.get_or_404(schedule_id)
+        current_schedule = self.schedule_repo.get_or_404(schedule_id)
 
-        # Check name uniqueness if changed
-        if schedule_in.name and schedule_in.name != schedule.name:
-            existing = self.schedule_repo.get_by_name(schedule_in.name)
-            if existing:
-                raise ConflictException(
-                    detail=f"Schedule '{schedule_in.name}' already exists",
-                    error_code="SCHEDULE_EXISTS",
-                )
-
-        # Validate times if changed
-        update_data = schedule_in.model_dump(exclude_unset=True)
-        start_time = update_data.get("start_time", schedule.start_time)
-        end_time = update_data.get("end_time", schedule.end_time)
-
-        if end_time <= start_time:
+        # Check if schedule is in use
+        groups_count = self.schedule_repo.get_groups_count(schedule_id)
+        if groups_count > 0:
             raise BadRequestException(
-                detail="End time must be after start time",
-                error_code="INVALID_TIME_RANGE",
+                detail=f"Cannot modify schedule. {groups_count} student groups use it",
+                error_code="SCHEDULE_IN_USE",
             )
 
-        # Check for overlapping schedules
-        if "start_time" in update_data or "end_time" in update_data:
-            overlapping = self.schedule_repo.get_overlapping_schedules(
-                start_time, end_time, exclude_id=schedule_id
-            )
-            if overlapping:
-                raise ConflictException(
-                    detail=f"Schedule overlaps with: {', '.join([s.name for s in overlapping])}",
-                    error_code="SCHEDULE_OVERLAP",
-                )
-
-        schedule = self.schedule_repo.update(db_obj=schedule, obj_in=schedule_in)
-        return ScheduleSchema.model_validate(schedule)
+        updated_schedule = self.schedule_repo.update(
+            db_obj=current_schedule, obj_in=schedule_in
+        )
+        return ScheduleSchema.model_validate(updated_schedule)
 
     def delete_schedule(self, schedule_id: int) -> None:
         """Delete schedule."""
-        schedule = self.schedule_repo.get_or_404(schedule_id)
+        _ = self.schedule_repo.get_or_404(schedule_id)
 
         # Check if schedule is in use
         groups_count = self.schedule_repo.get_groups_count(schedule_id)
@@ -208,7 +187,7 @@ class SchedulingService:
         self, time_block_id: int, block_in: TimeBlockUpdate
     ) -> TimeBlockSchema:
         """Update time block."""
-        block = self.time_block_repo.get_or_404(time_block_id)
+        current_block = self.time_block_repo.get_or_404(time_block_id)
 
         # Check if block is in use
         usage_count = self.time_block_repo.get_day_time_blocks_count(time_block_id)
@@ -220,8 +199,8 @@ class SchedulingService:
 
         # Validate times if changed
         update_data = block_in.model_dump(exclude_unset=True)
-        start_time = update_data.get("start_time", block.start_time)
-        end_time = update_data.get("end_time", block.end_time)
+        start_time = update_data.get("start_time", current_block.start_time)
+        end_time = update_data.get("end_time", current_block.end_time)
 
         if end_time <= start_time:
             raise BadRequestException(
@@ -238,12 +217,14 @@ class SchedulingService:
                     error_code="TIME_BLOCK_EXISTS",
                 )
 
-        block = self.time_block_repo.update(db_obj=block, obj_in=block_in)
-        return TimeBlockSchema.model_validate(block)
+        updated_block = self.time_block_repo.update(
+            db_obj=current_block, obj_in=block_in
+        )
+        return TimeBlockSchema.model_validate(updated_block)
 
     def delete_time_block(self, time_block_id: int) -> None:
         """Delete time block."""
-        block = self.time_block_repo.get_or_404(time_block_id)
+        _ = self.time_block_repo.get_or_404(time_block_id)
 
         # Check if block is in use
         usage_count = self.time_block_repo.get_day_time_blocks_count(time_block_id)
@@ -290,7 +271,7 @@ class SchedulingService:
 
     def delete_day_time_block(self, day_time_block_id: int) -> None:
         """Delete day-time block."""
-        dtb = self.day_time_block_repo.get_or_404(day_time_block_id)
+        _ = self.day_time_block_repo.get_or_404(day_time_block_id)
 
         # Check if in use
         schedules_count = self.day_time_block_repo.get_schedules_count(
@@ -359,12 +340,20 @@ class SchedulingService:
         self, quarter_id: int, quarter_in: QuarterUpdate
     ) -> QuarterSchema:
         """Update quarter."""
-        quarter = self.quarter_repo.get_or_404(quarter_id)
+        current_quarter = self.quarter_repo.get_or_404(quarter_id)
+
+        # Check if quarter is in use
+        schedules_count = self.quarter_repo.get_schedules_count(quarter_id)
+        if schedules_count > 0:
+            raise BadRequestException(
+                detail=f"Cannot modify quarter. {schedules_count} schedules use it",
+                error_code="QUARTER_IN_USE",
+            )
 
         # Validate dates if changed
         update_data = quarter_in.model_dump(exclude_unset=True)
-        start_date = update_data.get("start_date", quarter.start_date)
-        end_date = update_data.get("end_date", quarter.end_date)
+        start_date = update_data.get("start_date", current_quarter.start_date)
+        end_date = update_data.get("end_date", current_quarter.end_date)
 
         if end_date <= start_date:
             raise BadRequestException(
@@ -372,7 +361,7 @@ class SchedulingService:
                 error_code="INVALID_DATE_RANGE",
             )
 
-        # Check for overlapping quarters
+        # Check for overlapping quarters if dates changed
         if "start_date" in update_data or "end_date" in update_data:
             overlapping = self.quarter_repo.get_overlapping_quarters(
                 start_date, end_date, exclude_id=quarter_id
@@ -383,12 +372,14 @@ class SchedulingService:
                     error_code="QUARTER_OVERLAP",
                 )
 
-        quarter = self.quarter_repo.update(db_obj=quarter, obj_in=quarter_in)
-        return QuarterSchema.model_validate(quarter)
+        updated_quarter = self.quarter_repo.update(
+            db_obj=current_quarter, obj_in=quarter_in
+        )
+        return QuarterSchema.model_validate(updated_quarter)
 
     def delete_quarter(self, quarter_id: int) -> None:
         """Delete quarter."""
-        quarter = self.quarter_repo.get_or_404(quarter_id)
+        _ = self.quarter_repo.get_or_404(quarter_id)
 
         # Check if quarter has schedules
         schedules_count = self.quarter_repo.get_schedules_count(quarter_id)

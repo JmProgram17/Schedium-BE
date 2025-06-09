@@ -68,10 +68,10 @@ class HRService:
         self, department_id: int, dept_in: DepartmentUpdate
     ) -> DepartmentSchema:
         """Update department."""
-        department = self.department_repo.get_or_404(department_id)
+        current_department = self.department_repo.get_or_404(department_id)
 
         # Check uniqueness if name changed
-        if dept_in.name and dept_in.name != department.name:
+        if dept_in.name and dept_in.name != current_department.name:
             existing = self.department_repo.get_by_name(dept_in.name)
             if existing:
                 raise ConflictException(
@@ -79,12 +79,14 @@ class HRService:
                     error_code="DEPARTMENT_EXISTS",
                 )
 
-        department = self.department_repo.update(db_obj=department, obj_in=dept_in)
-        return DepartmentSchema.model_validate(department)
+        updated_department = self.department_repo.update(
+            db_obj=current_department, obj_in=dept_in
+        )
+        return DepartmentSchema.model_validate(updated_department)
 
     def delete_department(self, department_id: int) -> None:
         """Delete department."""
-        department = self.department_repo.get_or_404(department_id)
+        _ = self.department_repo.get_or_404(department_id)
 
         # Check if department has programs
         programs_count = self.department_repo.get_programs_count(department_id)
@@ -133,12 +135,12 @@ class HRService:
         self, contract_id: int, contract_in: ContractUpdate
     ) -> ContractSchema:
         """Update contract."""
-        contract = self.contract_repo.get_or_404(contract_id)
+        current_contract = self.contract_repo.get_or_404(contract_id)
 
         # Check uniqueness if type changed
         if (
             contract_in.contract_type
-            and contract_in.contract_type != contract.contract_type
+            and contract_in.contract_type != current_contract.contract_type
         ):
             existing = self.contract_repo.get_by_type(contract_in.contract_type)
             if existing:
@@ -147,12 +149,14 @@ class HRService:
                     error_code="CONTRACT_EXISTS",
                 )
 
-        contract = self.contract_repo.update(db_obj=contract, obj_in=contract_in)
-        return ContractSchema.model_validate(contract)
+        updated_contract = self.contract_repo.update(
+            db_obj=current_contract, obj_in=contract_in
+        )
+        return ContractSchema.model_validate(updated_contract)
 
     def delete_contract(self, contract_id: int) -> None:
         """Delete contract."""
-        contract = self.contract_repo.get_or_404(contract_id)
+        _ = self.contract_repo.get_or_404(contract_id)
 
         # Check if contract is in use
         instructors_count = self.contract_repo.get_instructors_count(contract_id)
@@ -211,10 +215,10 @@ class HRService:
         self, instructor_id: int, instructor_in: InstructorUpdate
     ) -> InstructorSchema:
         """Update instructor."""
-        instructor = self.instructor_repo.get_or_404(instructor_id)
+        current_instructor = self.instructor_repo.get_or_404(instructor_id)
 
         # Check email uniqueness if changed
-        if instructor_in.email and instructor_in.email != instructor.email:
+        if instructor_in.email and instructor_in.email != current_instructor.email:
             if self.instructor_repo.is_email_taken(instructor_in.email, instructor_id):
                 raise ConflictException(
                     detail=f"Email {instructor_in.email} is already taken",
@@ -230,15 +234,13 @@ class HRService:
             if instructor_in.department_id:
                 self.department_repo.get_or_404(instructor_in.department_id)
 
-        instructor = self.instructor_repo.update(
-            db_obj=instructor, obj_in=instructor_in
-        )
-        instructor = self.instructor_repo.get_with_relations(instructor_id)
-        return InstructorSchema.model_validate(instructor)
+        self.instructor_repo.update(db_obj=current_instructor, obj_in=instructor_in)
+        updated_instructor = self.instructor_repo.get_with_relations(instructor_id)
+        return InstructorSchema.model_validate(updated_instructor)
 
     def delete_instructor(self, instructor_id: int) -> None:
         """Delete instructor."""
-        instructor = self.instructor_repo.get_or_404(instructor_id)
+        _ = self.instructor_repo.get_or_404(instructor_id)
 
         # Check if instructor has schedules
         schedules_count = self.instructor_repo.get_schedules_count(instructor_id)

@@ -6,6 +6,7 @@ Handles business logic for authentication and authorization.
 from datetime import datetime, timedelta
 from typing import Optional, Tuple
 
+from jose import JWTError
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -108,24 +109,23 @@ class AuthService:
             UnauthorizedException: If refresh token is invalid
         """
         try:
-            # Decode refresh token
             payload = SecurityUtils.decode_token(refresh_token)
-
-            # Verify it's a refresh token
             if not SecurityUtils.verify_token_type(payload, "refresh"):
                 raise UnauthorizedException(
                     detail="Invalid token type", error_code="INVALID_TOKEN_TYPE"
                 )
 
-            # Get user ID
-            user_id = int(payload.get("sub"))
+            user_id = payload.get("sub")
+            if not user_id:
+                raise UnauthorizedException(
+                    detail="Invalid token payload", error_code="INVALID_TOKEN"
+                )
 
-            # Create new tokens
-            return self.create_tokens(user_id)
+            return self.create_tokens(int(user_id))
 
-        except Exception as e:
+        except JWTError:
             raise UnauthorizedException(
-                detail="Invalid refresh token", error_code="INVALID_REFRESH_TOKEN"
+                detail="Could not validate token", error_code="INVALID_TOKEN"
             )
 
     # User operations
@@ -222,7 +222,7 @@ class AuthService:
                 .join(Role)
                 .filter(
                     Role.name == "Administrator",
-                    User.active == True,
+                    User.active.is_(True),
                     User.user_id != user_id,
                 )
                 .count()

@@ -123,7 +123,7 @@ class TestComplexTransactions:
         scheduling_service = SchedulingService(db_session)
 
         # Create initial data
-        quarter = scheduling_service.create_quarter(
+        _ = scheduling_service.create_quarter(
             {"start_date": date(2024, 4, 1), "end_date": date(2024, 6, 30)}
         )
 

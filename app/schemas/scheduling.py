@@ -8,7 +8,10 @@ from typing import List, Optional
 
 from pydantic import Field, field_validator, model_validator
 
+from app.schemas.academic import StudentGroup
 from app.schemas.common import BaseSchema, TimestampSchema
+from app.schemas.hr import Instructor
+from app.schemas.infrastructure import Classroom
 
 
 # Schedule (Jornada) Schemas
@@ -222,8 +225,4 @@ class ScheduleValidation(BaseSchema):
 
 
 # Update forward references
-from app.schemas.academic import StudentGroup
-from app.schemas.hr import Instructor
-from app.schemas.infrastructure import Classroom
-
 ClassScheduleDetailed.model_rebuild()

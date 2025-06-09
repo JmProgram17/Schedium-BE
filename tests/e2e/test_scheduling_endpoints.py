@@ -77,7 +77,7 @@ class TestSchedulingEndpoints:
             json={"start_date": "2024-07-01", "end_date": "2024-09-30"},
         )
         assert quarter_response.status_code == status.HTTP_201_CREATED
-        quarter_id = quarter_response.json()["data"]["quarter_id"]
+        _ = quarter_response.json()["data"]["quarter_id"]
 
         # Get current quarter (might be None)
         current_response = authorized_client.get("/api/v1/scheduling/quarters/current")

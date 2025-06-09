@@ -89,8 +89,6 @@ class TestAcademicModels:
 
     def test_student_group_dates(self, db_session, test_program):
         """Test student group date validation."""
-        from app.models.scheduling import Schedule
-
         # Create schedule first
         schedule = Schedule(name="Morning", start_time=time(7, 0), end_time=time(13, 0))
         db_session.add(schedule)

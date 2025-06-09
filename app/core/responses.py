@@ -28,7 +28,7 @@ class BaseResponse(BaseModel, Generic[T]):
     message: str = Field(..., description="Human-readable message")
     data: Optional[T] = Field(None, description="Response data")
     meta: ResponseMeta = Field(
-        default_factory=ResponseMeta, description="Response metadata"
+        default_factory=lambda: ResponseMeta(), description="Response metadata"
     )
     errors: Optional[Dict[str, Any]] = Field(None, description="Error details if any")
 
@@ -51,7 +51,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
     message: str = Field(default="Data retrieved successfully")
     data: List[T] = Field(..., description="List of items")
     pagination: PaginationMeta = Field(..., description="Pagination information")
-    meta: ResponseMeta = Field(default_factory=ResponseMeta)
+    meta: ResponseMeta = Field(default_factory=lambda: ResponseMeta())
 
 
 class ErrorResponse(BaseModel):
@@ -63,7 +63,7 @@ class ErrorResponse(BaseModel):
     errors: Optional[Dict[str, Any]] = Field(
         None, description="Detailed error information"
     )
-    meta: ResponseMeta = Field(default_factory=ResponseMeta)
+    meta: ResponseMeta = Field(default_factory=lambda: ResponseMeta())
 
 
 class SuccessResponse(BaseResponse[T]):
@@ -108,7 +108,7 @@ def create_success_response(
         "meta": {"timestamp": datetime.utcnow().isoformat(), "version": "1.0"},
     }
     if meta:
-        response["meta"].update(meta)
+        response["meta"].update(meta)  # type: ignore[misc]
     return response
 
 
@@ -127,5 +127,5 @@ def create_error_response(
         "meta": {"timestamp": datetime.utcnow().isoformat(), "version": "1.0"},
     }
     if meta:
-        response["meta"].update(meta)
+        response["meta"].update(meta)  # type: ignore[misc]
     return response

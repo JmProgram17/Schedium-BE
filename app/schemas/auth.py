@@ -4,7 +4,7 @@ Provides validation and serialization for auth domain.
 """
 
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import (
     ConfigDict,
@@ -149,7 +149,7 @@ class ChangePasswordRequest(BaseSchema):
     new_password: str = Field(..., min_length=8, description="New password")
 
     @field_validator("new_password")
-    def validate_new_password(cls, v: str, info) -> str:
+    def validate_new_password(cls, v: str, info: Any) -> str:
         """Validate new password is different from current."""
         if "current_password" in info.data and v == info.data["current_password"]:
             raise ValueError("New password must be different from current password")

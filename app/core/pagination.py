@@ -4,7 +4,7 @@ Provides consistent pagination across the application.
 """
 
 from math import ceil
-from typing import Any, Dict, Generic, List, Optional, TypeVar
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func
@@ -57,7 +57,9 @@ class Page(BaseModel, Generic[T]):
 
 
 def paginate(
-    query: Query, params: PaginationParams, response_model: Optional[TypeVar] = None
+    query: Query,
+    params: PaginationParams,
+    response_model: Optional[Type[BaseModel]] = None,
 ) -> Page:
     """
     Paginate a SQLAlchemy query.

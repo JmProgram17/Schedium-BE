@@ -7,6 +7,7 @@ from typing import Any, Dict
 
 from fastapi import APIRouter, Depends
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -17,7 +18,9 @@ router = APIRouter()
 
 
 @router.get("/", response_model=SuccessResponse[Dict[str, Any]])
-async def health_check(db: Session = Depends(get_db)):
+async def health_check(
+    db: Session = Depends(get_db),
+) -> SuccessResponse[Dict[str, Any]]:
     """
     Check system health status.
 
@@ -39,18 +42,22 @@ async def health_check(db: Session = Depends(get_db)):
     try:
         db.execute(text("SELECT 1"))
         health_data["database"] = {"status": "connected", "type": "MySQL"}
-    except Exception as e:
+    except SQLAlchemyError as e:
         health_data["status"] = "degraded"
         health_data["database"] = {
             "status": "disconnected",
             "error": str(e) if settings.DEBUG else "Connection failed",
         }
 
-    return SuccessResponse(data=health_data, message="System health check completed")
+    return SuccessResponse(
+        data=health_data, message="System health check completed", errors=None
+    )
 
 
-@router.get("/ready", response_model=SuccessResponse[Dict[str, bool]])
-async def readiness_check(db: Session = Depends(get_db)):
+@router.get("/ready", response_model=SuccessResponse[Dict[str, Any]])
+async def readiness_check(
+    db: Session = Depends(get_db),
+) -> SuccessResponse[Dict[str, Any]]:
     """
     Check if the system is ready to handle requests.
 
@@ -66,21 +73,25 @@ async def readiness_check(db: Session = Depends(get_db)):
     try:
         db.execute(text("SELECT 1"))
         checks["database"] = True
-    except:
+    except SQLAlchemyError:
         pass
 
     all_ready = all(checks.values())
 
     return SuccessResponse(
-        data={"ready": all_ready, "checks": checks}, message="Readiness check completed"
+        data={"ready": all_ready, "checks": checks},
+        message="Readiness check completed",
+        errors=None,
     )
 
 
 @router.get("/live", response_model=SuccessResponse[Dict[str, bool]])
-async def liveness_check():
+async def liveness_check() -> SuccessResponse[Dict[str, bool]]:
     """
     Check if the application is alive.
 
     Used for Kubernetes liveness probes.
     """
-    return SuccessResponse(data={"alive": True}, message="Application is alive")
+    return SuccessResponse(
+        data={"alive": True}, message="Application is alive", errors=None
+    )

@@ -185,7 +185,7 @@ def main():
     print("\n🔍 Running initial code checks (this may take a while)...")
     try:
         subprocess.run(["pre-commit", "run", "--all-files"], check=False)
-    except:
+    except Exception:
         print("⚠️  Initial pre-commit run skipped (this is normal)")
 
     print("\n✅ Development environment setup complete!")

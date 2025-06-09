@@ -64,11 +64,8 @@ class TestAcademicEndpoints:
 
     def test_student_group_crud_flow(self, authorized_client, test_program):
         """Test complete CRUD flow for student groups."""
-        from app.models.scheduling import Schedule
-
-        # Create schedule first (normally this would exist)
-        schedule = Schedule(name="Evening", start_time="18:00:00", end_time="22:00:00")
-        # Would need to add to DB in real test
+        # Note: In a real test, we would need to create and persist a Schedule
+        # to the database before using it in the group creation
 
         # Create group
         create_response = authorized_client.post(
@@ -93,7 +90,8 @@ class TestAcademicEndpoints:
 
             # Update group
             update_response = authorized_client.put(
-                f"/api/v1/academic/groups/{group_id}", json={"capacity": 30}
+                f"/api/v1/academic/groups/{group_id}",
+                json={"capacity": 30},
             )
             assert update_response.status_code == status.HTTP_200_OK
             assert update_response.json()["data"]["capacity"] == 30

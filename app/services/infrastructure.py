@@ -74,23 +74,25 @@ class InfrastructureService:
 
     def update_campus(self, campus_id: int, campus_in: CampusUpdate) -> CampusSchema:
         """Update campus."""
-        campus = self.campus_repo.get_or_404(campus_id)
+        current_campus = self.campus_repo.get_or_404(campus_id)
 
-        # Check uniqueness if address changed
-        if campus_in.address and campus_in.address != campus.address:
-            existing = self.campus_repo.get_by_address(campus_in.address)
+        # Check uniqueness if name changed
+        if campus_in.name and campus_in.name != current_campus.name:
+            existing = self.campus_repo.get_by_name(campus_in.name)
             if existing:
                 raise ConflictException(
-                    detail=f"Campus at '{campus_in.address}' already exists",
+                    detail=f"Campus '{campus_in.name}' already exists",
                     error_code="CAMPUS_EXISTS",
                 )
 
-        campus = self.campus_repo.update(db_obj=campus, obj_in=campus_in)
-        return CampusSchema.model_validate(campus)
+        updated_campus = self.campus_repo.update(
+            db_obj=current_campus, obj_in=campus_in
+        )
+        return CampusSchema.model_validate(updated_campus)
 
     def delete_campus(self, campus_id: int) -> None:
         """Delete campus."""
-        campus = self.campus_repo.get_or_404(campus_id)
+        _ = self.campus_repo.get_or_404(campus_id)
 
         # Check if campus has classrooms
         classrooms_count = self.campus_repo.get_classrooms_count(campus_id)
@@ -149,18 +151,21 @@ class InfrastructureService:
         self, classroom_id: int, classroom_in: ClassroomUpdate
     ) -> ClassroomSchema:
         """Update classroom."""
-        classroom = self.classroom_repo.get_or_404(classroom_id)
+        current_classroom = self.classroom_repo.get_or_404(classroom_id)
 
         # Validate campus if changed
-        if classroom_in.campus_id and classroom_in.campus_id != classroom.campus_id:
+        if (
+            classroom_in.campus_id
+            and classroom_in.campus_id != current_classroom.campus_id
+        ):
             self.campus_repo.get_or_404(classroom_in.campus_id)
 
         # Check room uniqueness if changed
         if classroom_in.room_number and (
-            classroom_in.room_number != classroom.room_number
-            or classroom_in.campus_id != classroom.campus_id
+            classroom_in.room_number != current_classroom.room_number
+            or classroom_in.campus_id != current_classroom.campus_id
         ):
-            campus_id = classroom_in.campus_id or classroom.campus_id
+            campus_id = classroom_in.campus_id or current_classroom.campus_id
             existing = self.classroom_repo.get_by_room_and_campus(
                 classroom_in.room_number, campus_id
             )
@@ -170,13 +175,13 @@ class InfrastructureService:
                     error_code="ROOM_EXISTS",
                 )
 
-        classroom = self.classroom_repo.update(db_obj=classroom, obj_in=classroom_in)
-        classroom = self.classroom_repo.get_with_relations(classroom_id)
-        return ClassroomSchema.model_validate(classroom)
+        self.classroom_repo.update(db_obj=current_classroom, obj_in=classroom_in)
+        updated_classroom = self.classroom_repo.get_with_relations(classroom_id)
+        return ClassroomSchema.model_validate(updated_classroom)
 
     def delete_classroom(self, classroom_id: int) -> None:
         """Delete classroom."""
-        classroom = self.classroom_repo.get_or_404(classroom_id)
+        _ = self.classroom_repo.get_or_404(classroom_id)
 
         # Check if classroom has schedules
         schedules_count = self.classroom_repo.get_schedules_count(classroom_id)
@@ -208,7 +213,7 @@ class InfrastructureService:
         if not day_time_block:
             raise NotFoundException("Day time block not found")
 
-        quarter = quarter_repo.get_or_404(quarter_id)
+        _ = quarter_repo.get_or_404(quarter_id)
 
         # Get available classrooms
         available = self.classroom_repo.get_available_classrooms(

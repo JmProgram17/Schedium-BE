@@ -4,6 +4,7 @@ import factory
 from factory import fuzzy
 
 from app.models.infrastructure import Campus, Classroom, DepartmentClassroom
+from tests.factories.hr import DepartmentFactory
 
 
 class CampusFactory(factory.alchemy.SQLAlchemyModelFactory):

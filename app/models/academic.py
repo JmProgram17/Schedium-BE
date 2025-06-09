@@ -22,7 +22,7 @@ class Level(Base, TimeStampMixin):
     # Relationships
     programs = relationship("Program", back_populates="level")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Level(id={self.level_id}, type={self.study_type})>"
 
 
@@ -38,7 +38,7 @@ class Chain(Base, TimeStampMixin):
     # Relationships
     programs = relationship("Program", back_populates="chain")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Chain(id={self.chain_id}, name={self.name})>"
 
 
@@ -64,7 +64,7 @@ class Nomenclature(Base, TimeStampMixin):
     # Relationships
     programs = relationship("Program", back_populates="nomenclature")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Nomenclature(id={self.nomenclature_id}, code={self.code})>"
 
 
@@ -92,7 +92,7 @@ class Program(Base, TimeStampMixin):
     level = relationship("Level", back_populates="programs")
     student_groups = relationship("StudentGroup", back_populates="program")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Program(id={self.program_id}, name={self.name})>"
 
 
@@ -118,5 +118,5 @@ class StudentGroup(Base, TimeStampMixin):
     schedule = relationship("Schedule", back_populates="student_groups")
     class_schedules = relationship("ClassSchedule", back_populates="group")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<StudentGroup(id={self.group_id}, number={self.group_number})>"

@@ -25,7 +25,7 @@ class Schedule(Base, TimeStampMixin):
     # Relationships
     student_groups = relationship("StudentGroup", back_populates="schedule")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Schedule(id={self.schedule_id}, name={self.name})>"
 
 
@@ -33,7 +33,6 @@ class TimeBlock(Base, TimeStampMixin):
     """Time block model."""
 
     __tablename__ = "time_block"
-    __table_args__ = {"comment": "Time blocks for class scheduling"}
 
     time_block_id = Column(Integer, primary_key=True, autoincrement=True)
     start_time = Column(Time, nullable=False)
@@ -48,7 +47,7 @@ class TimeBlock(Base, TimeStampMixin):
         {"comment": "Time blocks for class scheduling"},
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"<TimeBlock(id={self.time_block_id}, {self.start_time}-{self.end_time})>"
         )
@@ -66,7 +65,7 @@ class Day(Base, TimeStampMixin):
     # Relationships
     day_time_blocks = relationship("DayTimeBlock", back_populates="day")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Day(id={self.day_id}, name={self.name})>"
 
 
@@ -74,9 +73,6 @@ class DayTimeBlock(Base, TimeStampMixin):
     """Day-TimeBlock relationship model."""
 
     __tablename__ = "day_time_block"
-    __table_args__ = {
-        "comment": "Association between days and time blocks for scheduling"
-    }
 
     day_time_block_id = Column(Integer, primary_key=True, autoincrement=True)
     time_block_id = Column(
@@ -98,7 +94,7 @@ class DayTimeBlock(Base, TimeStampMixin):
         {"comment": "Association between days and time blocks for scheduling"},
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<DayTimeBlock(id={self.day_time_block_id}, day={self.day_id}, block={self.time_block_id})>"
 
 
@@ -106,7 +102,6 @@ class Quarter(Base, TimeStampMixin):
     """Academic quarter model."""
 
     __tablename__ = "quarter"
-    __table_args__ = {"comment": "Academic quarters for scheduling"}
 
     quarter_id = Column(Integer, primary_key=True, autoincrement=True)
     start_date = Column(Date, nullable=False)
@@ -121,7 +116,7 @@ class Quarter(Base, TimeStampMixin):
         {"comment": "Academic quarters for scheduling"},
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Quarter(id={self.quarter_id}, name={self.name})>"
 
 
@@ -129,9 +124,6 @@ class ClassSchedule(Base, TimeStampMixin):
     """Class schedule (cronograma) model - Central entity."""
 
     __tablename__ = "class_schedule"
-    __table_args__ = {
-        "comment": "Class schedules linking instructors, groups, classrooms, and time slots"
-    }
 
     class_schedule_id = Column(Integer, primary_key=True, autoincrement=True)
     subject = Column(String(255), nullable=False)
@@ -190,5 +182,5 @@ class ClassSchedule(Base, TimeStampMixin):
         },
     )
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<ClassSchedule(id={self.class_schedule_id}, subject={self.subject})>"

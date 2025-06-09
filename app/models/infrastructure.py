@@ -23,7 +23,7 @@ class Campus(Base, TimeStampMixin):
     # Relationships
     classrooms = relationship("Classroom", back_populates="campus")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Campus(id={self.campus_id}, address={self.address})>"
 
 
@@ -46,7 +46,7 @@ class Classroom(Base, TimeStampMixin):
     departments = relationship("DepartmentClassroom", back_populates="classroom")
     class_schedules = relationship("ClassSchedule", back_populates="classroom")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Classroom(id={self.classroom_id}, room={self.room_number})>"
 
 
@@ -77,5 +77,5 @@ class DepartmentClassroom(Base, TimeStampMixin):
     department = relationship("Department", back_populates="classrooms")
     classroom = relationship("Classroom", back_populates="departments")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<DepartmentClassroom(dept={self.department_id}, class={self.classroom_id})>"

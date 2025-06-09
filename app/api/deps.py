@@ -7,7 +7,7 @@ from typing import Optional
 
 from fastapi import Depends, Query
 
-from app.core.dependencies import *  # Re-export core dependencies
+from app.core.dependencies import settings
 from app.core.pagination import PaginationParams, SortParams
 
 

@@ -4,7 +4,7 @@ Provides validation and serialization for academic entities.
 """
 
 from datetime import date
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from pydantic import Field, field_validator
 
@@ -145,7 +145,7 @@ class StudentGroupBase(BaseSchema):
     active: bool = Field(True, description="Active status")
 
     @field_validator("end_date")
-    def validate_dates(cls, v: date, info) -> date:
+    def validate_dates(cls, v: date, info: Any) -> date:
         """Validate end date is after start date."""
         if "start_date" in info.data and v <= info.data["start_date"]:
             raise ValueError("End date must be after start date")

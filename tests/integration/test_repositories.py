@@ -103,7 +103,7 @@ class TestTransactionRollback:
 
         try:
             # Create user with invalid data
-            user = user_repo.create(
+            _ = user_repo.create(
                 obj_in=UserCreate(
                     first_name="Test",
                     last_name="User",

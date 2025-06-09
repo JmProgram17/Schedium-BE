@@ -97,7 +97,7 @@ class TestHRService:
             email="first@test.com",
             department_id=test_department.department_id,
         )
-        inst1 = hr_service.create_instructor(inst1_data)
+        _ = hr_service.create_instructor(inst1_data)
 
         inst2_data = InstructorCreate(
             first_name="Second",

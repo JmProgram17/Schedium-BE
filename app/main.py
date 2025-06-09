@@ -6,12 +6,15 @@ Configures FastAPI app with middleware, routes, and event handlers.
 import logging
 import time
 from contextlib import asynccontextmanager
+from typing import Any, AsyncGenerator, Awaitable, Callable, Dict
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
+from starlette.responses import Response
 
+from app.api.v1.router import api_router
 from app.config import settings
 from app.core.auth_middleware import AuthenticationMiddleware
 from app.database import init_db
@@ -25,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Manage application lifecycle.
     Run startup and shutdown tasks.
@@ -81,7 +84,9 @@ app.add_middleware(
 
 # Add request timing middleware
 @app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
+async def add_process_time_header(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
     """Add request processing time to response headers."""
     start_time = time.time()
     response = await call_next(request)
@@ -92,7 +97,9 @@ async def add_process_time_header(request: Request, call_next):
 
 # Add request ID middleware
 @app.middleware("http")
-async def add_request_id(request: Request, call_next):
+async def add_request_id(
+    request: Request, call_next: Callable[[Request], Awaitable[Response]]
+) -> Response:
     """Add unique request ID for tracking."""
     import uuid
 
@@ -105,7 +112,7 @@ async def add_request_id(request: Request, call_next):
 
 # Root endpoint
 @app.get("/")
-async def root():
+async def root() -> Dict[str, Any]:
     """Root endpoint returning API information."""
     return {
         "name": settings.APP_NAME,
@@ -118,7 +125,7 @@ async def root():
 
 # Health check endpoint
 @app.get("/health")
-async def health_check():
+async def health_check() -> Dict[str, Any]:
     """
     Health check endpoint.
     Returns application and database status.
@@ -150,7 +157,7 @@ async def health_check():
 
 # Global exception handler
 @app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception):
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     """Handle uncaught exceptions."""
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
 
@@ -164,6 +171,4 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 # Include API routers
-from app.api.v1.router import api_router
-
 app.include_router(api_router, prefix=settings.API_V1_STR)

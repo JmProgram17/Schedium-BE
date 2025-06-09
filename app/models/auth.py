@@ -21,7 +21,7 @@ class Role(Base, TimeStampMixin):
     # Relationships
     users = relationship("User", back_populates="role")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Role(id={self.role_id}, name={self.name})>"
 
 
@@ -45,9 +45,9 @@ class User(Base, TimeStampMixin):
     role = relationship("Role", back_populates="users")
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         """Get user's full name."""
         return f"{self.first_name} {self.last_name}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<User(id={self.user_id}, email={self.email})>"

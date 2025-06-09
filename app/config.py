@@ -8,18 +8,18 @@ import os
 import platform
 import secrets
 import sys
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, TextIO, Union
 
-from pydantic import ValidationInfo, field_validator
-from pydantic_settings import BaseSettings
+from pydantic import ConfigDict, ValidationInfo, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Configure UTF-8 output for Windows
 if platform.system() == "Windows":
     # Set console encoding to UTF-8
-    if sys.stdout.encoding != "utf-8":
-        sys.stdout.reconfigure(encoding="utf-8")
-    if sys.stderr.encoding != "utf-8":
-        sys.stderr.reconfigure(encoding="utf-8")
+    if sys.stdout.encoding != "utf-8" and hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[misc]
+    if sys.stderr.encoding != "utf-8" and hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[misc]
 
 
 class Settings(BaseSettings):
@@ -113,14 +113,13 @@ class Settings(BaseSettings):
         """Check if running in testing mode."""
         return self.APP_ENV == "testing"
 
-    class Config:
-        """Pydantic configuration."""
-
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
         # Importante: NO parsear campos complejos como JSON automáticamente
-        json_encoders = {list: lambda v: v}
+        json_encoders={list: lambda v: v},
+    )
 
 
 # Create global settings instance

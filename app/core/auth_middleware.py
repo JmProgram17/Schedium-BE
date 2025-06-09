@@ -11,6 +11,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 from app.config import settings
+from app.core.exceptions import TokenError
 from app.core.security import SecurityUtils
 
 
@@ -57,7 +58,7 @@ class JWTBearer(HTTPBearer):
         try:
             payload = SecurityUtils.decode_token(token)
             return SecurityUtils.verify_token_type(payload, "access")
-        except:
+        except (TokenError, ValueError, TypeError):
             return False
 
 
@@ -97,7 +98,7 @@ class AuthenticationMiddleware(BaseHTTPMiddleware):
                     request.state.user_id = payload.get("sub")
                     request.state.user_email = payload.get("email")
                     request.state.user_role = payload.get("role")
-            except:
+            except (TokenError, ValueError, TypeError):
                 # Invalid token, but continue without user context
                 pass
 

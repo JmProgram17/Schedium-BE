@@ -73,7 +73,7 @@ class NomenclatureRepository(
 
     def get_active(self) -> List[Nomenclature]:
         """Get all active nomenclatures."""
-        return self.db.query(Nomenclature).filter(Nomenclature.active == True).all()
+        return self.db.query(Nomenclature).filter(Nomenclature.active.is_(True)).all()
 
     def get_programs_count(self, nomenclature_id: int) -> int:
         """Get count of programs using this nomenclature."""
@@ -228,7 +228,7 @@ class StudentGroupRepository(
 
     def get_active_groups(self) -> List[StudentGroup]:
         """Get all active student groups."""
-        return self.db.query(StudentGroup).filter(StudentGroup.active == True).all()
+        return self.db.query(StudentGroup).filter(StudentGroup.active.is_(True)).all()
 
     def get_schedules_count(self, group_id: int) -> int:
         """Get count of class schedules for this group."""

@@ -3,6 +3,8 @@ Human resources domain models.
 Maps instructor, contract, and department tables.
 """
 
+from decimal import Decimal
+
 from sqlalchemy import DECIMAL, Boolean, Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
 
@@ -27,7 +29,7 @@ class Department(Base, TimeStampMixin):
     instructors = relationship("Instructor", back_populates="department")
     classrooms = relationship("DepartmentClassroom", back_populates="department")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Department(id={self.department_id}, name={self.name})>"
 
 
@@ -44,7 +46,7 @@ class Contract(Base, TimeStampMixin):
     # Relationships
     instructors = relationship("Instructor", back_populates="contract")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Contract(id={self.contract_id}, type={self.contract_type})>"
 
 
@@ -59,7 +61,7 @@ class Instructor(Base, TimeStampMixin):
     last_name = Column(String(100), nullable=False, index=True)
     phone_number = Column(String(20))
     email = Column(String(100), nullable=False, unique=True, index=True)
-    hour_count = Column(DECIMAL(10, 2), default=0, comment="Total assigned hours")
+    hour_count = Column(DECIMAL(10, 2), default=0, comment="Total assigned hours")  # type: ignore[var-annotated]
     contract_id = Column(
         Integer, ForeignKey("contract.contract_id", ondelete="SET NULL")
     )
@@ -74,9 +76,9 @@ class Instructor(Base, TimeStampMixin):
     class_schedules = relationship("ClassSchedule", back_populates="instructor")
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         """Get instructor's full name."""
         return f"{self.first_name} {self.last_name}"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Instructor(id={self.instructor_id}, name={self.full_name})>"

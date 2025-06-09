@@ -168,7 +168,7 @@ async def get_current_user_optional(
 
     try:
         return await get_current_user(token, db)
-    except:
+    except (UnauthorizedException, JWTError):
         return None
 
 

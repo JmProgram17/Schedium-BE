@@ -77,22 +77,12 @@ class AcademicService:
     def update_level(self, level_id: int, level_in: LevelUpdate) -> LevelSchema:
         """Update level."""
         level = self.level_repo.get_or_404(level_id)
-
-        # Check uniqueness if study type changed
-        if level_in.study_type and level_in.study_type != level.study_type:
-            existing = self.level_repo.get_by_study_type(level_in.study_type)
-            if existing:
-                raise ConflictException(
-                    detail=f"Level with study type '{level_in.study_type}' already exists",
-                    error_code="LEVEL_EXISTS",
-                )
-
-        level = self.level_repo.update(db_obj=level, obj_in=level_in)
-        return LevelSchema.model_validate(level)
+        updated_level = self.level_repo.update(db_obj=level, obj_in=level_in)
+        return LevelSchema.model_validate(updated_level)
 
     def delete_level(self, level_id: int) -> None:
         """Delete level."""
-        level = self.level_repo.get_or_404(level_id)
+        _ = self.level_repo.get_or_404(level_id)
 
         # Check if level is in use
         programs_count = self.level_repo.get_programs_count(level_id)
@@ -142,12 +132,12 @@ class AcademicService:
                     error_code="CHAIN_EXISTS",
                 )
 
-        chain = self.chain_repo.update(db_obj=chain, obj_in=chain_in)
-        return ChainSchema.model_validate(chain)
+        updated_chain = self.chain_repo.update(db_obj=chain, obj_in=chain_in)
+        return ChainSchema.model_validate(updated_chain)
 
     def delete_chain(self, chain_id: int) -> None:
         """Delete chain."""
-        chain = self.chain_repo.get_or_404(chain_id)
+        _ = self.chain_repo.get_or_404(chain_id)
 
         # Check if chain is in use
         programs_count = self.chain_repo.get_programs_count(chain_id)
@@ -202,12 +192,14 @@ class AcademicService:
                     error_code="NOMENCLATURE_EXISTS",
                 )
 
-        nomenclature = self.nomenclature_repo.update(db_obj=nomenclature, obj_in=nom_in)
-        return NomenclatureSchema.model_validate(nomenclature)
+        updated_nomenclature = self.nomenclature_repo.update(
+            db_obj=nomenclature, obj_in=nom_in
+        )
+        return NomenclatureSchema.model_validate(updated_nomenclature)
 
     def delete_nomenclature(self, nomenclature_id: int) -> None:
         """Delete nomenclature."""
-        nomenclature = self.nomenclature_repo.get_or_404(nomenclature_id)
+        _ = self.nomenclature_repo.get_or_404(nomenclature_id)
 
         # Check if nomenclature is in use
         programs_count = self.nomenclature_repo.get_programs_count(nomenclature_id)
@@ -290,13 +282,13 @@ class AcademicService:
             if program_in.level_id:
                 self.level_repo.get_or_404(program_in.level_id)
 
-        program = self.program_repo.update(db_obj=program, obj_in=program_in)
-        program = self.program_repo.get_with_relations(program_id)
-        return ProgramSchema.model_validate(program)
+        self.program_repo.update(db_obj=program, obj_in=program_in)
+        updated_program = self.program_repo.get_with_relations(program_id)
+        return ProgramSchema.model_validate(updated_program)
 
     def delete_program(self, program_id: int) -> None:
         """Delete program."""
-        program = self.program_repo.get_or_404(program_id)
+        _ = self.program_repo.get_or_404(program_id)
 
         # Check if program has student groups
         groups_count = self.program_repo.get_student_groups_count(program_id)
@@ -432,7 +424,7 @@ class AcademicService:
 
     def delete_student_group(self, group_id: int) -> None:
         """Delete student group (admin only)."""
-        group = self.group_repo.get_or_404(group_id)
+        _ = self.group_repo.get_or_404(group_id)
 
         # Check if group has schedules
         schedules_count = self.group_repo.get_schedules_count(group_id)

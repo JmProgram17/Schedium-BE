@@ -153,7 +153,7 @@ class InstructorRepository(
 
     def get_active_instructors(self) -> List[Instructor]:
         """Get all active instructors."""
-        return self.db.query(Instructor).filter(Instructor.active == True).all()
+        return self.db.query(Instructor).filter(Instructor.active.is_(True)).all()
 
     def get_schedules_count(self, instructor_id: int) -> int:
         """Get count of class schedules for this instructor."""
