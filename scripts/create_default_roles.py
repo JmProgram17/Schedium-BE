@@ -20,22 +20,22 @@ def create_default_roles():
     print("=" * 60)
     print("Creating Default Roles")
     print("=" * 60)
-    
+
     db = SessionLocal()
-    
+
     try:
         role_repo = RoleRepository(db)
-        
+
         # Define default roles
         default_roles = [
             "Administrator",
-            "Coordinator", 
+            "Coordinator",
             "Secretary",
-            "User"  # New basic user role
+            "User",  # New basic user role
         ]
-        
+
         created_count = 0
-        
+
         for role_name in default_roles:
             existing = role_repo.get_by_name(role_name)
             if not existing:
@@ -44,10 +44,10 @@ def create_default_roles():
                 created_count += 1
             else:
                 print(f"ℹ️  Role already exists: {role_name}")
-        
+
         print(f"\n✅ Process completed. Created {created_count} new roles.")
         return True
-        
+
     except Exception as e:
         print(f"\n❌ Error: {e}")
         return False

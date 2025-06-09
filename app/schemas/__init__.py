@@ -3,190 +3,217 @@ Schemas package initialization.
 Re-exports all schemas for convenient imports.
 """
 
-# Common schemas
-from app.schemas.common import (
-    BaseSchema,
-    TimestampSchema,
-    IDSchema,
-    MessageSchema,
-    StatusSchema,
-    ErrorDetailSchema,
-    BulkResponseSchema
-)
-
-# Auth schemas
-from app.schemas.auth import (
-    # Role
-    RoleBase,
-    RoleCreate,
-    RoleUpdate,
-    Role,
-    
-    # User
-    UserBase,
-    UserCreate,
-    UserUpdate,
-    User,
-    UserWithoutPassword,
-    
-    # Authentication
-    Token,
-    TokenData,
-    LoginRequest,
-    ChangePasswordRequest
-)
-
 # Academic schemas
-from app.schemas.academic import (
-    # Level
-    LevelBase,
-    LevelCreate,
-    LevelUpdate,
-    Level,
-    
-    # Chain
+from app.schemas.academic import (  # Level; Chain; Nomenclature; Program; Student Group
+    Chain,
     ChainBase,
     ChainCreate,
     ChainUpdate,
-    Chain,
-    
-    # Nomenclature
+    Level,
+    LevelBase,
+    LevelCreate,
+    LevelUpdate,
+    Nomenclature,
     NomenclatureBase,
     NomenclatureCreate,
     NomenclatureUpdate,
-    Nomenclature,
-    
-    # Program
+    Program,
     ProgramBase,
     ProgramCreate,
     ProgramUpdate,
-    Program,
-    
-    # Student Group
+    StudentGroup,
     StudentGroupBase,
     StudentGroupCreate,
+    StudentGroupDisable,
     StudentGroupUpdate,
-    StudentGroup,
-    StudentGroupDisable
+)
+
+# Auth schemas
+from app.schemas.auth import (  # Role; User; Authentication
+    ChangePasswordRequest,
+    LoginRequest,
+    Role,
+    RoleBase,
+    RoleCreate,
+    RoleUpdate,
+    Token,
+    TokenData,
+    User,
+    UserBase,
+    UserCreate,
+    UserUpdate,
+    UserWithoutPassword,
+)
+
+# Common schemas
+from app.schemas.common import (
+    BaseSchema,
+    BulkResponseSchema,
+    ErrorDetailSchema,
+    IDSchema,
+    MessageSchema,
+    StatusSchema,
+    TimestampSchema,
 )
 
 # HR schemas
-from app.schemas.hr import (
-    # Department
-    DepartmentBase,
-    DepartmentCreate,
-    DepartmentUpdate,
-    Department,
-    
-    # Contract
+from app.schemas.hr import (  # Department; Contract; Instructor
+    Contract,
     ContractBase,
     ContractCreate,
     ContractUpdate,
-    Contract,
-    
-    # Instructor
+    Department,
+    DepartmentBase,
+    DepartmentCreate,
+    DepartmentUpdate,
+    Instructor,
     InstructorBase,
     InstructorCreate,
     InstructorUpdate,
-    Instructor,
-    InstructorWorkload
+    InstructorWorkload,
 )
 
 # Infrastructure schemas
-from app.schemas.infrastructure import (
-    # Campus
+from app.schemas.infrastructure import (  # Campus; Classroom; Department-Classroom
+    Campus,
     CampusBase,
     CampusCreate,
     CampusUpdate,
-    Campus,
-    
-    # Classroom
+    Classroom,
+    ClassroomAvailability,
     ClassroomBase,
     ClassroomCreate,
     ClassroomUpdate,
-    Classroom,
-    
-    # Department-Classroom
+    DepartmentClassroom,
     DepartmentClassroomBase,
     DepartmentClassroomCreate,
     DepartmentClassroomUpdate,
-    DepartmentClassroom,
-    ClassroomAvailability
 )
 
 # Scheduling schemas
-from app.schemas.scheduling import (
-    # Schedule
-    ScheduleBase,
-    ScheduleCreate,
-    ScheduleUpdate,
-    Schedule,
-    
-    # Time Block
-    TimeBlockBase,
-    TimeBlockCreate,
-    TimeBlockUpdate,
-    TimeBlock,
-    
-    # Day
-    DayBase,
+from app.schemas.scheduling import (  # Schedule; Time Block; Day; Day-Time Block; Quarter; Class Schedule
+    ClassSchedule,
+    ClassScheduleBase,
+    ClassScheduleCreate,
+    ClassScheduleDetailed,
+    ClassScheduleUpdate,
     Day,
-    
-    # Day-Time Block
+    DayBase,
+    DayTimeBlock,
     DayTimeBlockBase,
     DayTimeBlockCreate,
-    DayTimeBlock,
-    
-    # Quarter
+    Quarter,
     QuarterBase,
     QuarterCreate,
     QuarterUpdate,
-    Quarter,
-    
-    # Class Schedule
-    ClassScheduleBase,
-    ClassScheduleCreate,
-    ClassScheduleUpdate,
-    ClassSchedule,
-    ClassScheduleDetailed,
+    Schedule,
+    ScheduleBase,
     ScheduleConflict,
-    ScheduleValidation
+    ScheduleCreate,
+    ScheduleUpdate,
+    ScheduleValidation,
+    TimeBlock,
+    TimeBlockBase,
+    TimeBlockCreate,
+    TimeBlockUpdate,
 )
 
 __all__ = [
     # Common
-    "BaseSchema", "TimestampSchema", "IDSchema", "MessageSchema",
-    "StatusSchema", "ErrorDetailSchema", "BulkResponseSchema",
-    
+    "BaseSchema",
+    "TimestampSchema",
+    "IDSchema",
+    "MessageSchema",
+    "StatusSchema",
+    "ErrorDetailSchema",
+    "BulkResponseSchema",
     # Auth
-    "RoleBase", "RoleCreate", "RoleUpdate", "Role",
-    "UserBase", "UserCreate", "UserUpdate", "User", "UserWithoutPassword",
-    "Token", "TokenData", "LoginRequest", "ChangePasswordRequest",
-    
+    "RoleBase",
+    "RoleCreate",
+    "RoleUpdate",
+    "Role",
+    "UserBase",
+    "UserCreate",
+    "UserUpdate",
+    "User",
+    "UserWithoutPassword",
+    "Token",
+    "TokenData",
+    "LoginRequest",
+    "ChangePasswordRequest",
     # Academic
-    "LevelBase", "LevelCreate", "LevelUpdate", "Level",
-    "ChainBase", "ChainCreate", "ChainUpdate", "Chain",
-    "NomenclatureBase", "NomenclatureCreate", "NomenclatureUpdate", "Nomenclature",
-    "ProgramBase", "ProgramCreate", "ProgramUpdate", "Program",
-    "StudentGroupBase", "StudentGroupCreate", "StudentGroupUpdate", "StudentGroup", "StudentGroupDisable",
-    
+    "LevelBase",
+    "LevelCreate",
+    "LevelUpdate",
+    "Level",
+    "ChainBase",
+    "ChainCreate",
+    "ChainUpdate",
+    "Chain",
+    "NomenclatureBase",
+    "NomenclatureCreate",
+    "NomenclatureUpdate",
+    "Nomenclature",
+    "ProgramBase",
+    "ProgramCreate",
+    "ProgramUpdate",
+    "Program",
+    "StudentGroupBase",
+    "StudentGroupCreate",
+    "StudentGroupUpdate",
+    "StudentGroup",
+    "StudentGroupDisable",
     # HR
-    "DepartmentBase", "DepartmentCreate", "DepartmentUpdate", "Department",
-    "ContractBase", "ContractCreate", "ContractUpdate", "Contract",
-    "InstructorBase", "InstructorCreate", "InstructorUpdate", "Instructor", "InstructorWorkload",
-    
+    "DepartmentBase",
+    "DepartmentCreate",
+    "DepartmentUpdate",
+    "Department",
+    "ContractBase",
+    "ContractCreate",
+    "ContractUpdate",
+    "Contract",
+    "InstructorBase",
+    "InstructorCreate",
+    "InstructorUpdate",
+    "Instructor",
+    "InstructorWorkload",
     # Infrastructure
-    "CampusBase", "CampusCreate", "CampusUpdate", "Campus",
-    "ClassroomBase", "ClassroomCreate", "ClassroomUpdate", "Classroom",
-    "DepartmentClassroomBase", "DepartmentClassroomCreate", "DepartmentClassroomUpdate",
-    "DepartmentClassroom", "ClassroomAvailability",
-    
+    "CampusBase",
+    "CampusCreate",
+    "CampusUpdate",
+    "Campus",
+    "ClassroomBase",
+    "ClassroomCreate",
+    "ClassroomUpdate",
+    "Classroom",
+    "DepartmentClassroomBase",
+    "DepartmentClassroomCreate",
+    "DepartmentClassroomUpdate",
+    "DepartmentClassroom",
+    "ClassroomAvailability",
     # Scheduling
-    "ScheduleBase", "ScheduleCreate", "ScheduleUpdate", "Schedule",
-    "TimeBlockBase", "TimeBlockCreate", "TimeBlockUpdate", "TimeBlock",
-    "DayBase", "Day",
-    "DayTimeBlockBase", "DayTimeBlockCreate", "DayTimeBlock",
-    "QuarterBase", "QuarterCreate", "QuarterUpdate", "Quarter",
-    "ClassScheduleBase", "ClassScheduleCreate", "ClassScheduleUpdate",
-    "ClassSchedule", "ClassScheduleDetailed", "ScheduleConflict", "ScheduleValidation"
+    "ScheduleBase",
+    "ScheduleCreate",
+    "ScheduleUpdate",
+    "Schedule",
+    "TimeBlockBase",
+    "TimeBlockCreate",
+    "TimeBlockUpdate",
+    "TimeBlock",
+    "DayBase",
+    "Day",
+    "DayTimeBlockBase",
+    "DayTimeBlockCreate",
+    "DayTimeBlock",
+    "QuarterBase",
+    "QuarterCreate",
+    "QuarterUpdate",
+    "Quarter",
+    "ClassScheduleBase",
+    "ClassScheduleCreate",
+    "ClassScheduleUpdate",
+    "ClassSchedule",
+    "ClassScheduleDetailed",
+    "ScheduleConflict",
+    "ScheduleValidation",
 ]

@@ -4,12 +4,13 @@ Provides a centralized way to handle business logic errors.
 """
 
 from typing import Any, Dict, Optional
+
 from fastapi import HTTPException, status
 
 
 class BaseAppException(HTTPException):
     """Base exception class for application-specific errors."""
-    
+
     def __init__(
         self,
         status_code: int,
@@ -23,7 +24,7 @@ class BaseAppException(HTTPException):
 
 class NotFoundException(BaseAppException):
     """Exception raised when a requested resource is not found."""
-    
+
     def __init__(
         self,
         detail: str = "Resource not found",
@@ -40,7 +41,7 @@ class NotFoundException(BaseAppException):
 
 class BadRequestException(BaseAppException):
     """Exception raised for invalid requests."""
-    
+
     def __init__(
         self,
         detail: str = "Bad request",
@@ -57,7 +58,7 @@ class BadRequestException(BaseAppException):
 
 class UnauthorizedException(BaseAppException):
     """Exception raised when authentication fails."""
-    
+
     def __init__(
         self,
         detail: str = "Unauthorized",
@@ -76,7 +77,7 @@ class UnauthorizedException(BaseAppException):
 
 class ForbiddenException(BaseAppException):
     """Exception raised when user lacks permission."""
-    
+
     def __init__(
         self,
         detail: str = "Forbidden",
@@ -93,7 +94,7 @@ class ForbiddenException(BaseAppException):
 
 class ConflictException(BaseAppException):
     """Exception raised when there's a conflict with current state."""
-    
+
     def __init__(
         self,
         detail: str = "Conflict",
@@ -110,7 +111,7 @@ class ConflictException(BaseAppException):
 
 class ValidationException(BaseAppException):
     """Exception raised when validation fails."""
-    
+
     def __init__(
         self,
         detail: str = "Validation error",
@@ -129,7 +130,7 @@ class ValidationException(BaseAppException):
 
 class BusinessLogicException(BaseAppException):
     """Exception raised when business rules are violated."""
-    
+
     def __init__(
         self,
         detail: str,
@@ -147,29 +148,28 @@ class BusinessLogicException(BaseAppException):
 # Specific business exceptions
 class ScheduleConflictException(ConflictException):
     """Exception raised when there's a scheduling conflict."""
-    
+
     def __init__(self, detail: str, conflict_type: str):
         super().__init__(
-            detail=detail,
-            error_code=f"SCHEDULE_CONFLICT_{conflict_type.upper()}"
+            detail=detail, error_code=f"SCHEDULE_CONFLICT_{conflict_type.upper()}"
         )
 
 
 class InstructorOverloadException(BusinessLogicException):
     """Exception raised when instructor exceeds hour limit."""
-    
+
     def __init__(self, instructor_name: str, current_hours: float, limit: float):
         super().__init__(
             detail=f"Instructor {instructor_name} would exceed hour limit. Current: {current_hours}h, Limit: {limit}h",
-            error_code="INSTRUCTOR_OVERLOAD"
+            error_code="INSTRUCTOR_OVERLOAD",
         )
 
 
 class InsufficientCapacityException(BusinessLogicException):
     """Exception raised when classroom capacity is insufficient."""
-    
+
     def __init__(self, classroom: str, required: int, available: int):
         super().__init__(
             detail=f"Classroom {classroom} has insufficient capacity. Required: {required}, Available: {available}",
-            error_code="INSUFFICIENT_CAPACITY"
+            error_code="INSUFFICIENT_CAPACITY",
         )

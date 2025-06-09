@@ -3,51 +3,68 @@ Repositories package.
 Provides data access layer for all domains.
 """
 
-from app.repositories.base import BaseRepository
-
-# Auth repositories
-from app.repositories.auth import UserRepository, RoleRepository
-
 # Academic repositories
 from app.repositories.academic import (
-    LevelRepository, ChainRepository, NomenclatureRepository,
-    ProgramRepository, StudentGroupRepository
+    ChainRepository,
+    LevelRepository,
+    NomenclatureRepository,
+    ProgramRepository,
+    StudentGroupRepository,
 )
+
+# Auth repositories
+from app.repositories.auth import RoleRepository, UserRepository
+from app.repositories.base import BaseRepository
 
 # HR repositories
 from app.repositories.hr import (
-    DepartmentRepository, ContractRepository, InstructorRepository
+    ContractRepository,
+    DepartmentRepository,
+    InstructorRepository,
 )
 
 # Infrastructure repositories
 from app.repositories.infrastructure import (
-    CampusRepository, ClassroomRepository, DepartmentClassroomRepository
+    CampusRepository,
+    ClassroomRepository,
+    DepartmentClassroomRepository,
 )
 
 # Scheduling repositories
 from app.repositories.scheduling import (
-    ScheduleRepository, TimeBlockRepository, DayRepository,
-    DayTimeBlockRepository, QuarterRepository, ClassScheduleRepository
+    ClassScheduleRepository,
+    DayRepository,
+    DayTimeBlockRepository,
+    QuarterRepository,
+    ScheduleRepository,
+    TimeBlockRepository,
 )
 
 __all__ = [
     # Base
     "BaseRepository",
-    
     # Auth
-    "UserRepository", "RoleRepository",
-    
+    "UserRepository",
+    "RoleRepository",
     # Academic
-    "LevelRepository", "ChainRepository", "NomenclatureRepository",
-    "ProgramRepository", "StudentGroupRepository",
-    
+    "LevelRepository",
+    "ChainRepository",
+    "NomenclatureRepository",
+    "ProgramRepository",
+    "StudentGroupRepository",
     # HR
-    "DepartmentRepository", "ContractRepository", "InstructorRepository",
-    
+    "DepartmentRepository",
+    "ContractRepository",
+    "InstructorRepository",
     # Infrastructure
-    "CampusRepository", "ClassroomRepository", "DepartmentClassroomRepository",
-    
+    "CampusRepository",
+    "ClassroomRepository",
+    "DepartmentClassroomRepository",
     # Scheduling
-    "ScheduleRepository", "TimeBlockRepository", "DayRepository",
-    "DayTimeBlockRepository", "QuarterRepository", "ClassScheduleRepository"
+    "ScheduleRepository",
+    "TimeBlockRepository",
+    "DayRepository",
+    "DayTimeBlockRepository",
+    "QuarterRepository",
+    "ClassScheduleRepository",
 ]

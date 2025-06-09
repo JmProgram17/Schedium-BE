@@ -3,13 +3,14 @@ Alembic environment configuration.
 Handles database migrations for Schedium.
 """
 
-from logging.config import fileConfig
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-from alembic import context
 import os
 import sys
+from logging.config import fileConfig
 from pathlib import Path
+
+from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 # Add project root to Python path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -17,14 +18,19 @@ sys.path.append(str(Path(__file__).parent.parent))
 # Import settings and models
 from app.config import settings
 from app.database import Base
+from app.models.academic import Chain, Level, Nomenclature, Program, StudentGroup
 
 # Import all models to ensure they're registered with Base.metadata
-from app.models.auth import User, Role
-from app.models.academic import Level, Chain, Nomenclature, Program, StudentGroup
-from app.models.hr import Department, Contract, Instructor
+from app.models.auth import Role, User
+from app.models.hr import Contract, Department, Instructor
 from app.models.infrastructure import Campus, Classroom, DepartmentClassroom
 from app.models.scheduling import (
-    Schedule, TimeBlock, Day, DayTimeBlock, Quarter, ClassSchedule
+    ClassSchedule,
+    Day,
+    DayTimeBlock,
+    Quarter,
+    Schedule,
+    TimeBlock,
 )
 
 # this is the Alembic Config object, which provides
@@ -57,11 +63,11 @@ def include_object(object, name, type_, reflected, compare_to):
     # Skip views
     if type_ == "table" and name.startswith("view_"):
         return False
-    
+
     # Skip MySQL internal tables
     if name in ["alembic_version"]:
         return True
-    
+
     # Include everything else
     return True
 
@@ -128,7 +134,7 @@ def render_item(type_, obj, autogen_context):
         # Handle MySQL DECIMAL type
         if hasattr(obj, "precision") and hasattr(obj, "scale"):
             return f"sa.DECIMAL(precision={obj.precision}, scale={obj.scale})"
-    
+
     # Default rendering for other types
     return False
 

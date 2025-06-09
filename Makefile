@@ -35,6 +35,7 @@ install:
 install-dev: install
 	@echo "📦 Installing development dependencies..."
 	$(PIP) install -r requirements-dev.txt
+	pre-commit install
 
 # Cleaning
 clean:
@@ -95,6 +96,7 @@ test-integration:
 # Code quality
 format:
 	@echo "🎨 Formatting code..."
+	isort . --profile=black
 	$(BLACK) .
 
 lint:
@@ -109,9 +111,8 @@ security:
 	bandit -r app/
 
 # Validation
-validate:
-	@echo "✅ Running complete validation..."
-	$(PYTHON) scripts/validate_installation.py
+validate: format lint test security
+	@echo "✅ All validations passed!"
 
 # Docker commands
 docker-build:

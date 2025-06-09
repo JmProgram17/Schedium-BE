@@ -18,15 +18,18 @@ def test_services():
     """Test that all services can be instantiated."""
     from app.database import get_db
     from app.services import (
-        AuthService, AcademicService, HRService,
-        InfrastructureService, SchedulingService
+        AcademicService,
+        AuthService,
+        HRService,
+        InfrastructureService,
+        SchedulingService,
     )
-    
+
     print("🔍 Testing Services...")
-    
+
     # Get a database session
     db = next(get_db())
-    
+
     try:
         # Test instantiation
         services = {
@@ -34,34 +37,36 @@ def test_services():
             "AcademicService": AcademicService(db),
             "HRService": HRService(db),
             "InfrastructureService": InfrastructureService(db),
-            "SchedulingService": SchedulingService(db)
+            "SchedulingService": SchedulingService(db),
         }
-        
+
         print("✅ All services instantiated successfully!")
-        
+
         # Test basic queries
         print("\n📋 Testing basic queries...")
-        
+
         # Test getting roles
         roles = services["AuthService"].get_roles()
         print(f"✅ Found {len(roles)} roles")
-        
+
         # Test getting departments
         from app.core.pagination import PaginationParams
+
         params = PaginationParams(page=1, page_size=10)
-        
+
         departments = services["HRService"].get_departments(params)
         print(f"✅ Found {departments.total} departments")
-        
+
         # Test getting days
         days = services["SchedulingService"].get_days()
         print(f"✅ Found {len(days)} days of the week")
-        
+
         print("\n🎉 All tests passed!")
-        
+
     except Exception as e:
         print(f"❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
     finally:
         db.close()

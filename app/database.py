@@ -3,12 +3,13 @@ Database configuration module.
 Handles SQLAlchemy engine, session management, and base model.
 """
 
+import logging
+from typing import Generator
+
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import QueuePool
-from typing import Generator
-import logging
 
 from app.config import settings
 
@@ -27,18 +28,11 @@ engine_config = {
 }
 
 # Create database engine
-engine = create_engine(
-    settings.DATABASE_URL,
-    poolclass=QueuePool,
-    **engine_config
-)
+engine = create_engine(settings.DATABASE_URL, poolclass=QueuePool, **engine_config)
 
 # Configure session factory
 SessionLocal = sessionmaker(
-    bind=engine,
-    autocommit=False,
-    autoflush=False,
-    expire_on_commit=False
+    bind=engine, autocommit=False, autoflush=False, expire_on_commit=False
 )
 
 # Create base class for models
@@ -50,7 +44,7 @@ Base.metadata.naming_convention = {
     "uq": "uq_%(table_name)s_%(column_0_name)s",
     "ck": "ck_%(table_name)s_%(constraint_name)s",
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
-    "pk": "pk_%(table_name)s"
+    "pk": "pk_%(table_name)s",
 }
 
 
@@ -77,11 +71,13 @@ def init_db() -> None:
             result = conn.execute(text("SELECT 1"))
             result.fetchone()
         logger.info("Database connection established successfully")
-        
+
         # Log connection pool status
         logger.info(f"Database pool size: {engine.pool.size()}")
-        logger.info(f"Database pool checked out connections: {engine.pool.checkedout()}")
-        
+        logger.info(
+            f"Database pool checked out connections: {engine.pool.checkedout()}"
+        )
+
     except Exception as e:
         logger.error(f"Failed to connect to database: {str(e)}")
         raise
@@ -108,6 +104,7 @@ def receive_checkin(dbapi_connection, connection_record):
 
 # MySQL specific configurations
 if "mysql" in settings.DATABASE_URL:
+
     @event.listens_for(engine, "connect")
     def set_mysql_mode(dbapi_connection, connection_record):
         """Set MySQL specific modes for better compatibility."""

@@ -3,11 +3,11 @@ Services package.
 Provides business logic layer for all domains.
 """
 
-# Auth services
-from app.services.auth import AuthService
-
 # Academic services
 from app.services.academic import AcademicService
+
+# Auth services
+from app.services.auth import AuthService
 
 # HR services
 from app.services.hr import HRService
@@ -20,8 +20,8 @@ from app.services.scheduling import SchedulingService
 
 __all__ = [
     "AuthService",
-    "AcademicService", 
+    "AcademicService",
     "HRService",
     "InfrastructureService",
-    "SchedulingService"
+    "SchedulingService",
 ]
