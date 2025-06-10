@@ -1,6 +1,3 @@
-# 📄 README.md - Documento Completo
-
-```markdown
 # Schedium Backend API
 
 Sistema de gestión de programación académica desarrollado con FastAPI para optimizar la asignación de horarios, instructores y ambientes educativos.
@@ -98,14 +95,17 @@ cd schedium-backend
 # Copiar archivo de configuración
 cp .env.example .env
 
-# Editar configuración
+# Editar configuración (importante: cambiar SECRET_KEY y credenciales de BD)
 nano .env
 
 # Construir y ejecutar servicios
 docker-compose up -d
 
+# Ejecutar migraciones de base de datos
+docker-compose exec api alembic upgrade head
+
 # Verificar logs
-docker-compose logs -f app
+docker-compose logs -f api
 ```
 
 ### 3. Instalación Manual
@@ -417,13 +417,41 @@ schedium-backend/
 
 ```bash
 # Build de producción
-docker build -f docker/app/Dockerfile -t schedium-api:latest .
+docker build -t schedium-api:latest .
 
-# Ejecutar con docker-compose
-docker-compose -f docker-compose.prod.yml up -d
+# Ejecutar con docker-compose (incluye MySQL y Redis)
+docker-compose up -d
+
+# Para producción con Nginx (opcional)
+docker-compose --profile production up -d
 
 # Escalar horizontalmente
-docker-compose -f docker-compose.prod.yml up -d --scale app=3
+docker-compose up -d --scale api=3
+
+# Comandos útiles Docker
+docker-compose logs -f api          # Ver logs de la aplicación
+docker-compose exec api bash        # Acceder al contenedor
+docker-compose down                  # Detener servicios
+docker-compose down -v              # Detener y eliminar volúmenes
+```
+
+### Comandos Docker Adicionales
+
+```bash
+# Ejecutar migraciones
+docker-compose exec api alembic upgrade head
+
+# Crear usuario administrador
+docker-compose exec api python scripts/create_admin_user.py
+
+# Verificar estado de la aplicación
+docker-compose exec api python scripts/verify_setup.py
+
+# Backup de base de datos
+docker-compose exec mysql mysqldump -u root -p schedium > backup.sql
+
+# Restaurar base de datos
+docker-compose exec -i mysql mysql -u root -p schedium < backup.sql
 ```
 
 ### Kubernetes
