@@ -38,6 +38,9 @@ SessionLocal = sessionmaker(
 # Create base class for models
 Base = declarative_base()
 
+# Allow unmapped annotations for legacy models
+Base.__allow_unmapped__ = True
+
 # Add naming convention for constraints
 Base.metadata.naming_convention = {
     "ix": "ix_%(column_0_label)s",
@@ -73,10 +76,14 @@ def init_db() -> None:
         logger.info("Database connection established successfully")
 
         # Log connection pool status
-        logger.info(f"Database pool size: {engine.pool.size()}")  # type: ignore[misc]
-        logger.info(
-            f"Database pool checked out connections: {engine.pool.checkedout()}"
-        )  # type: ignore[misc]
+        try:
+            if hasattr(engine.pool, '_pool') and hasattr(engine.pool._pool, 'qsize'):
+                logger.info(f"Database pool size: {engine.pool._pool.qsize()}")
+            if hasattr(engine.pool, '_overflow'):
+                logger.info(f"Database pool overflow: {engine.pool._overflow}")
+            logger.info("Database connection established with pool info")
+        except AttributeError:
+            logger.info("Database connection established (pool info not available)")
 
     except Exception as e:
         logger.error(f"Failed to connect to database: {str(e)}")

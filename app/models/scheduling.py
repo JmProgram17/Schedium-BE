@@ -16,6 +16,7 @@ class Schedule(Base, TimeStampMixin):
     __table_args__ = {
         "comment": "Daily schedules for classes (morning, afternoon, evening, etc.)"
     }
+    __allow_unmapped__ = True
 
     schedule_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False, unique=True, index=True)
@@ -33,6 +34,7 @@ class TimeBlock(Base, TimeStampMixin):
     """Time block model."""
 
     __tablename__ = "time_block"
+    __allow_unmapped__ = True
 
     time_block_id = Column(Integer, primary_key=True, autoincrement=True)
     start_time = Column(Time, nullable=False)
@@ -58,6 +60,7 @@ class Day(Base, TimeStampMixin):
 
     __tablename__ = "day"
     __table_args__ = {"comment": "Days of the week"}
+    __allow_unmapped__ = True
 
     day_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(20), nullable=False, unique=True, index=True)
@@ -73,15 +76,17 @@ class DayTimeBlock(Base, TimeStampMixin):
     """Day-TimeBlock relationship model."""
 
     __tablename__ = "day_time_block"
+    __allow_unmapped__ = True
 
     day_time_block_id = Column(Integer, primary_key=True, autoincrement=True)
     time_block_id = Column(
         Integer,
         ForeignKey("time_block.time_block_id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     day_id = Column(
-        Integer, ForeignKey("day.day_id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("day.day_id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     # Relationships
@@ -102,6 +107,7 @@ class Quarter(Base, TimeStampMixin):
     """Academic quarter model."""
 
     __tablename__ = "quarter"
+    __allow_unmapped__ = True
 
     quarter_id = Column(Integer, primary_key=True, autoincrement=True)
     start_date = Column(Date, nullable=False)
@@ -124,31 +130,36 @@ class ClassSchedule(Base, TimeStampMixin):
     """Class schedule (cronograma) model - Central entity."""
 
     __tablename__ = "class_schedule"
+    __allow_unmapped__ = True
 
     class_schedule_id = Column(Integer, primary_key=True, autoincrement=True)
     subject = Column(String(255), nullable=False)
     quarter_id = Column(
-        Integer, ForeignKey("quarter.quarter_id", ondelete="CASCADE"), nullable=False
+        Integer, ForeignKey("quarter.quarter_id", ondelete="CASCADE"), nullable=False, index=True
     )
     day_time_block_id = Column(
         Integer,
         ForeignKey("day_time_block.day_time_block_id", ondelete="RESTRICT"),
         nullable=False,
+        index=True,
     )
     group_id = Column(
         Integer,
         ForeignKey("student_group.group_id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     instructor_id = Column(
         Integer,
         ForeignKey("instructor.instructor_id", ondelete="RESTRICT"),
         nullable=False,
+        index=True,
     )
     classroom_id = Column(
         Integer,
         ForeignKey("classroom.classroom_id", ondelete="RESTRICT"),
         nullable=False,
+        index=True,
     )
 
     # Relationships

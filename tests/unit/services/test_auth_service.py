@@ -67,7 +67,7 @@ class TestAuthService:
         self, auth_service, db_session, test_role_admin
     ):
         """Test authentication with inactive user."""
-        from app.core.security import SecurityUtils
+        from app.core.auth_security import SecurityUtils
         from app.models.auth import User
 
         # Create inactive user

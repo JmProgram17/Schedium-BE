@@ -11,7 +11,7 @@ from jose import JWTError, jwt
 from app.config import settings
 from app.core.auth_middleware import AuthenticationMiddleware, JWTBearer
 from app.core.exceptions import UnauthorizedException
-from app.core.security import SecurityUtils
+from app.core.auth_security import SecurityUtils
 
 
 class TestJWTBearer:

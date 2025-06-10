@@ -3,7 +3,7 @@
 import factory
 from factory import fuzzy
 
-from app.core.security import SecurityUtils
+from app.core.auth_security import SecurityUtils
 from app.models.auth import Role, User
 
 

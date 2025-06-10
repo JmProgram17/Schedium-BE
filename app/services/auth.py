@@ -17,7 +17,7 @@ from app.core.exceptions import (
     UnauthorizedException,
 )
 from app.core.pagination import Page, PaginationParams
-from app.core.security import SecurityUtils
+from app.core.auth_security import SecurityUtils
 from app.models.auth import Role, User
 from app.repositories.auth import RoleRepository, UserRepository
 from app.schemas.auth import Role as RoleSchema

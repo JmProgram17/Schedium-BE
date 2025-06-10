@@ -173,3 +173,34 @@ class InsufficientCapacityException(BusinessLogicException):
             detail=f"Classroom {classroom} has insufficient capacity. Required: {required}, Available: {available}",
             error_code="INSUFFICIENT_CAPACITY",
         )
+
+
+class RateLimitExceededException(BaseAppException):
+    """Exception raised when rate limit is exceeded."""
+
+    def __init__(
+        self,
+        detail: str = "Rate limit exceeded",
+        headers: Optional[Dict[str, str]] = None,
+        error_code: str = "RATE_LIMIT_EXCEEDED",
+    ):
+        super().__init__(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=detail,
+            headers=headers,
+            error_code=error_code,
+        )
+
+
+class TokenError(UnauthorizedException):
+    """Exception raised when token validation fails."""
+
+    def __init__(
+        self,
+        detail: str = "Invalid token",
+        error_code: str = "INVALID_TOKEN",
+    ):
+        super().__init__(
+            detail=detail,
+            error_code=error_code,
+        )

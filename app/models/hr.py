@@ -18,6 +18,7 @@ class Department(Base, TimeStampMixin):
     __table_args__ = {
         "comment": "Academic departments that manage programs and instructors"
     }
+    __allow_unmapped__ = True
 
     department_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False, index=True)
@@ -38,6 +39,7 @@ class Contract(Base, TimeStampMixin):
 
     __tablename__ = "contract"
     __table_args__ = {"comment": "Instructor contract types"}
+    __allow_unmapped__ = True
 
     contract_id = Column(Integer, primary_key=True, autoincrement=True)
     contract_type = Column(String(100), nullable=False, index=True)
@@ -55,6 +57,7 @@ class Instructor(Base, TimeStampMixin):
 
     __tablename__ = "instructor"
     __table_args__ = {"comment": "Instructors who teach courses"}
+    __allow_unmapped__ = True
 
     instructor_id = Column(Integer, primary_key=True, autoincrement=True)
     first_name = Column(String(100), nullable=False)
@@ -63,10 +66,10 @@ class Instructor(Base, TimeStampMixin):
     email = Column(String(100), nullable=False, unique=True, index=True)
     hour_count = Column(DECIMAL(10, 2), default=0, comment="Total assigned hours")  # type: ignore[var-annotated]
     contract_id = Column(
-        Integer, ForeignKey("contract.contract_id", ondelete="SET NULL")
+        Integer, ForeignKey("contract.contract_id", ondelete="SET NULL"), index=True
     )
     department_id = Column(
-        Integer, ForeignKey("department.department_id", ondelete="SET NULL")
+        Integer, ForeignKey("department.department_id", ondelete="SET NULL"), index=True
     )
     active = Column(Boolean, default=True, nullable=False)
 

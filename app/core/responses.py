@@ -108,7 +108,9 @@ def create_success_response(
         "meta": {"timestamp": datetime.utcnow().isoformat(), "version": "1.0"},
     }
     if meta:
-        response["meta"].update(meta)  # type: ignore[misc]
+        meta_dict = response["meta"]
+        assert isinstance(meta_dict, dict)
+        meta_dict.update(meta)
     return response
 
 
@@ -127,5 +129,7 @@ def create_error_response(
         "meta": {"timestamp": datetime.utcnow().isoformat(), "version": "1.0"},
     }
     if meta:
-        response["meta"].update(meta)  # type: ignore[misc]
+        meta_dict = response["meta"]
+        assert isinstance(meta_dict, dict)
+        meta_dict.update(meta)
     return response

@@ -12,7 +12,7 @@ from starlette.responses import Response
 
 from app.config import settings
 from app.core.exceptions import TokenError
-from app.core.security import SecurityUtils
+from app.core.auth_security import SecurityUtils
 
 
 class JWTBearer(HTTPBearer):

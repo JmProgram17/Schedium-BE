@@ -8,7 +8,7 @@ import pytest
 from jose import jwt
 
 from app.config import settings
-from app.core.security import SecurityUtils
+from app.core.auth_security import SecurityUtils
 
 
 class TestSecurityUtils:

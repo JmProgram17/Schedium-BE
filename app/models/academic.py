@@ -14,6 +14,7 @@ class Level(Base, TimeStampMixin):
 
     __tablename__ = "level"
     __table_args__ = {"comment": "Academic levels for programs"}
+    __allow_unmapped__ = True
 
     level_id = Column(Integer, primary_key=True, autoincrement=True)
     study_type = Column(String(100), nullable=False, index=True)
@@ -31,6 +32,7 @@ class Chain(Base, TimeStampMixin):
 
     __tablename__ = "chain"
     __table_args__ = {"comment": "Program chains or learning paths"}
+    __allow_unmapped__ = True
 
     chain_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False, unique=True, index=True)
@@ -49,6 +51,7 @@ class Nomenclature(Base, TimeStampMixin):
     __table_args__ = {
         "comment": "Standardized abbreviations or codes for academic programs"
     }
+    __allow_unmapped__ = True
 
     nomenclature_id = Column(Integer, primary_key=True, autoincrement=True)
     code = Column(
@@ -73,17 +76,18 @@ class Program(Base, TimeStampMixin):
 
     __tablename__ = "program"
     __table_args__ = {"comment": "Academic programs offered by the institution"}
+    __allow_unmapped__ = True
 
     program_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(255), nullable=False, index=True)
     nomenclature_id = Column(
-        Integer, ForeignKey("nomenclature.nomenclature_id", ondelete="SET NULL")
+        Integer, ForeignKey("nomenclature.nomenclature_id", ondelete="SET NULL"), index=True
     )
-    chain_id = Column(Integer, ForeignKey("chain.chain_id", ondelete="SET NULL"))
+    chain_id = Column(Integer, ForeignKey("chain.chain_id", ondelete="SET NULL"), index=True)
     department_id = Column(
-        Integer, ForeignKey("department.department_id", ondelete="SET NULL")
+        Integer, ForeignKey("department.department_id", ondelete="SET NULL"), index=True
     )
-    level_id = Column(Integer, ForeignKey("level.level_id", ondelete="SET NULL"))
+    level_id = Column(Integer, ForeignKey("level.level_id", ondelete="SET NULL"), index=True)
 
     # Relationships
     nomenclature = relationship("Nomenclature", back_populates="programs")
@@ -101,15 +105,16 @@ class StudentGroup(Base, TimeStampMixin):
 
     __tablename__ = "student_group"
     __table_args__ = {"comment": "Student groups assigned to specific programs"}
+    __allow_unmapped__ = True
 
     group_id = Column(Integer, primary_key=True, autoincrement=True)
     group_number = Column(Integer, nullable=False, unique=True, index=True)
-    program_id = Column(Integer, ForeignKey("program.program_id", ondelete="RESTRICT"))
+    program_id = Column(Integer, ForeignKey("program.program_id", ondelete="RESTRICT"), index=True)
     start_date = Column(Date, nullable=False)
     end_date = Column(Date, nullable=False)
     capacity = Column(Integer, nullable=False)
     schedule_id = Column(
-        Integer, ForeignKey("schedule.schedule_id", ondelete="RESTRICT")
+        Integer, ForeignKey("schedule.schedule_id", ondelete="RESTRICT"), index=True
     )
     active = Column(Boolean, default=True, nullable=False)
 

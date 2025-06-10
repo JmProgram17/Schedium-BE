@@ -14,6 +14,7 @@ class Campus(Base, TimeStampMixin):
 
     __tablename__ = "campus"
     __table_args__ = {"comment": "Physical locations where classes are held"}
+    __allow_unmapped__ = True
 
     campus_id = Column(Integer, primary_key=True, autoincrement=True)
     address = Column(String(255), nullable=False)
@@ -32,12 +33,13 @@ class Classroom(Base, TimeStampMixin):
 
     __tablename__ = "classroom"
     __table_args__ = {"comment": "Physical classrooms where classes are held"}
+    __allow_unmapped__ = True
 
     classroom_id = Column(Integer, primary_key=True, autoincrement=True)
     room_number = Column(String(20), nullable=False)
     capacity = Column(Integer, nullable=False)
     campus_id = Column(
-        Integer, ForeignKey("campus.campus_id", ondelete="RESTRICT"), nullable=False
+        Integer, ForeignKey("campus.campus_id", ondelete="RESTRICT"), nullable=False, index=True
     )
     classroom_type = Column(String(50), default="Standard")
 
@@ -57,6 +59,7 @@ class DepartmentClassroom(Base, TimeStampMixin):
     __table_args__ = {
         "comment": "Many-to-many relationship between departments and classrooms"
     }
+    __allow_unmapped__ = True
 
     department_id = Column(
         Integer,

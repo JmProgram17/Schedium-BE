@@ -7,7 +7,6 @@ import logging
 import time
 from contextlib import asynccontextmanager
 from typing import Any, AsyncGenerator, Awaitable, Callable, Dict
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -18,13 +17,56 @@ from app.api.v1.router import api_router
 from app.config import settings
 from app.core.auth_middleware import AuthenticationMiddleware
 from app.database import init_db
-
-# Configure logging
-logging.basicConfig(
-    level=getattr(logging, settings.LOG_LEVEL.upper()),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+from app.core.middleware import (
+    ErrorHandlerMiddleware,
+    LoggingMiddleware,
+    RequestIDMiddleware,
 )
-logger = logging.getLogger(__name__)
+from app.core.middleware.security import SecurityMiddleware
+from app.core.security.cors import configure_cors
+from app.core.security.headers import SecurityHeadersMiddleware
+from app.core.logging import setup_logging, get_logger
+
+# Configure logging first
+setup_logging()
+logger = get_logger(__name__)
+
+# Create app
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.APP_VERSION,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
+    debug=settings.DEBUG,
+)
+
+# Middleware order is important!
+# 1. Request ID (needed by other middlewares)
+app.add_middleware(RequestIDMiddleware)
+
+# 2. Error handler (catches all exceptions)
+ErrorHandlerMiddleware(app)
+
+# 3. Security headers
+app.add_middleware(SecurityHeadersMiddleware)
+
+# 4. CORS
+configure_cors(app)
+
+# 5. Logging (logs all requests)
+app.add_middleware(LoggingMiddleware)
+
+# 6. Security (rate limiting, validation)
+app.add_middleware(SecurityMiddleware)
+
+# 7. Authentication (last, uses request state)
+app.add_middleware(AuthenticationMiddleware)
+
+# 8. Add trusted host check for production
+if settings.IS_PRODUCTION:
+    app.add_middleware(
+        TrustedHostMiddleware,
+        allowed_hosts=settings.ALLOWED_HOSTS,
+    )
 
 
 @asynccontextmanager
@@ -50,13 +92,25 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.APP_VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
-    if not settings.IS_PRODUCTION
-    else None,
+    openapi_url=f"{settings.API_V1_STR}/openapi.json" if not settings.IS_PRODUCTION else None,
     docs_url=f"{settings.API_V1_STR}/docs" if not settings.IS_PRODUCTION else None,
     redoc_url=f"{settings.API_V1_STR}/redoc" if not settings.IS_PRODUCTION else None,
     lifespan=lifespan,
+    # Security configurations
+    swagger_ui_parameters={
+        "persistAuthorization": True,
+        "filter": True,
+    } if not settings.IS_PRODUCTION else None,
 )
+
+# Configure CORS with security
+configure_cors(app)
+
+# Add security middlewares in order
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(SecurityMiddleware)
+app.add_middleware(LoggingMiddleware)
+app.add_middleware(AuthenticationMiddleware)
 
 # Configure CORS
 if settings.BACKEND_CORS_ORIGINS:

@@ -12,7 +12,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from app.core.security import SecurityUtils
+from app.core.auth_security import SecurityUtils
 from app.database import SessionLocal
 from app.models.auth import Role, User
 from app.repositories.auth import RoleRepository, UserRepository

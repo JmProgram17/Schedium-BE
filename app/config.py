@@ -17,9 +17,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 if platform.system() == "Windows":
     # Set console encoding to UTF-8
     if sys.stdout.encoding != "utf-8" and hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[misc]
+        sys.stdout.reconfigure(encoding="utf-8")
     if sys.stderr.encoding != "utf-8" and hasattr(sys.stderr, "reconfigure"):
-        sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[misc]
+        sys.stderr.reconfigure(encoding="utf-8")
 
 
 class Settings(BaseSettings):
@@ -40,6 +40,48 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    RATE_LIMIT_ENABLED: bool = True
+    RATE_LIMIT_PER_MINUTE: int = 60
+    RATE_LIMIT_PER_HOUR: int = 1000
+
+    # Redis for rate limiting
+    REDIS_URL: str = "redis://localhost:6379/0"
+
+    # Request limits
+    MAX_REQUEST_SIZE: int = 10 * 1024 * 1024  # 10MB
+    MAX_UPLOAD_SIZE: int = 50 * 1024 * 1024   # 50MB
+
+    # Session security
+    SESSION_SECRET_KEY: str = secrets.token_urlsafe(32)
+    SESSION_EXPIRE_MINUTES: int = 60
+
+    # CSRF protection
+    CSRF_SECRET_KEY: str = secrets.token_urlsafe(32)
+    CSRF_TOKEN_EXPIRE_MINUTES: int = 60
+
+    # Password policy
+    PASSWORD_MIN_LENGTH: int = 8
+    PASSWORD_REQUIRE_UPPERCASE: bool = True
+    PASSWORD_REQUIRE_LOWERCASE: bool = True
+    PASSWORD_REQUIRE_NUMBERS: bool = True
+    PASSWORD_REQUIRE_SPECIAL: bool = True
+
+    # API Key settings (if using)
+    API_KEY_HEADER: str = "X-API-Key"
+    API_KEY_SALT: str = secrets.token_urlsafe(32)
+
+    # Security headers
+    HSTS_MAX_AGE: int = 31536000  # 1 year
+
+    # Allowed file extensions for uploads
+    ALLOWED_UPLOAD_EXTENSIONS: List[str] = [
+        "jpg", "jpeg", "png", "gif", "pdf",
+        "doc", "docx", "xls", "xlsx", "csv"
+    ]
+
+    # IP whitelist/blacklist (optional)
+    IP_WHITELIST: List[str] = []
+    IP_BLACKLIST: List[str] = []
 
     # Database
     DB_HOST: str

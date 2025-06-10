@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.core.exceptions import ForbiddenException, UnauthorizedException
-from app.core.security import SecurityUtils
+from app.core.auth_security import SecurityUtils
 from app.database import SessionLocal
 from app.models.auth import User
 from app.repositories.auth import UserRepository

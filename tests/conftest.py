@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.config import settings
-from app.core.security import SecurityUtils
+from app.core.auth_security import SecurityUtils
 from app.database import Base, get_db
 from app.main import app
 from app.models import *  # Import all models

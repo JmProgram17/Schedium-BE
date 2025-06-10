@@ -14,6 +14,7 @@ class Role(Base, TimeStampMixin):
 
     __tablename__ = "role"
     __table_args__ = {"comment": "User roles for system access control"}
+    __allow_unmapped__ = True
 
     role_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(50), nullable=False, unique=True, index=True)
@@ -30,6 +31,7 @@ class User(Base, TimeStampMixin):
 
     __tablename__ = "user"
     __table_args__ = {"comment": "System users with access credentials"}
+    __allow_unmapped__ = True
 
     user_id = Column(Integer, primary_key=True, autoincrement=True)
     first_name = Column(String(100), nullable=False)
@@ -37,7 +39,7 @@ class User(Base, TimeStampMixin):
     document_number = Column(String(20), nullable=False, unique=True, index=True)
     password = Column(String(255), nullable=False)
     email = Column(String(100), nullable=False, unique=True, index=True)
-    role_id = Column(Integer, ForeignKey("role.role_id", ondelete="RESTRICT"))
+    role_id = Column(Integer, ForeignKey("role.role_id", ondelete="RESTRICT"), index=True)
     active = Column(Boolean, default=True, nullable=False)
     last_login = Column(DateTime, nullable=True)
 
