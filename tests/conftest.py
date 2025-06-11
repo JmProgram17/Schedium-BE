@@ -7,6 +7,10 @@ import os
 from datetime import datetime
 from typing import AsyncGenerator, Generator
 
+# Set test environment BEFORE any app imports
+os.environ["APP_ENV"] = "testing"
+os.environ["RATE_LIMIT_ENABLED"] = "false"
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
@@ -18,9 +22,6 @@ from app.core.auth_security import SecurityUtils
 from app.database import Base, get_db
 from app.main import app
 from app.models import *  # Import all models
-
-# Set test environment
-os.environ["APP_ENV"] = "testing"
 
 # Test database URL - use in-memory SQLite for speed
 TEST_DATABASE_URL = "sqlite:///:memory:"

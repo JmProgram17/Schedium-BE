@@ -123,8 +123,8 @@ DB_USER=your_db_user
 DB_PASSWORD=your_db_password
 DB_NAME=schedium_database
 
-# Security
-SECRET_KEY="your-secret-key-here-change-in-production"
+# Security (IMPORTANT: Generate a secure key with: python scripts/generate_secret_key.py)
+SECRET_KEY="CHANGE_THIS_IN_PRODUCTION_USE_GENERATOR_SCRIPT"
 ALGORITHM="HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES=30
 """,

@@ -25,7 +25,11 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
     def __init__(self, app):
         super().__init__(app)
-        self.rate_limiter = get_rate_limiter()
+        # Skip rate limiter initialization in testing
+        if settings.APP_ENV == "testing" or not settings.RATE_LIMIT_ENABLED:
+            self.rate_limiter = None
+        else:
+            self.rate_limiter = get_rate_limiter()
         self.sanitizer = InputSanitizer()
         self.validator = SecurityValidator()
 
@@ -89,6 +93,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
 
     async def _check_rate_limit(self, request: Request) -> Optional[JSONResponse]:
         """Check rate limiting."""
+        # Skip rate limiting in testing environment
+        if settings.APP_ENV == "testing" or not settings.RATE_LIMIT_ENABLED:
+            return None
+            
         if self.rate_limiter and settings.RATE_LIMIT_ENABLED:
             try:
                 await self.rate_limiter.check_rate_limit(request)
@@ -104,7 +112,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         """Validate content type for modification requests."""
         if request.method in ["POST", "PUT", "PATCH"]:
             content_type = request.headers.get("content-type", "")
-            if not any(ct in content_type for ct in ["application/json", "multipart/form-data"]):
+            if not any(ct in content_type for ct in ["application/json", "multipart/form-data", "application/x-www-form-urlencoded"]):
                 return JSONResponse(
                     status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                     content={"detail": "Unsupported media type"},
@@ -154,6 +162,51 @@ class SecurityMiddleware(BaseHTTPMiddleware):
         if not api_key or len(api_key) < 32:
             return False
 
-        # Add your API key validation logic here
-        # This is a placeholder implementation
-        return True
+        # API key format: "sched_" + 32 hex chars + "_" + timestamp + "_" + signature
+        # Example: sched_a1b2c3d4e5f6789012345678901234567890_1640995200_abc123def456
+        
+        try:
+            # Check prefix
+            if not api_key.startswith("sched_"):
+                return False
+                
+            # Remove prefix and split parts
+            key_without_prefix = api_key[6:]  # Remove "sched_"
+            parts = key_without_prefix.split("_")
+            
+            if len(parts) != 3:
+                return False
+                
+            key_id, timestamp_str, signature = parts
+            
+            # Validate key ID (should be 32 hex chars)
+            if len(key_id) != 32 or not all(c in "0123456789abcdef" for c in key_id.lower()):
+                return False
+                
+            # Validate timestamp (should be valid unix timestamp)
+            try:
+                timestamp = int(timestamp_str)
+                current_timestamp = int(time.time())
+                
+                # API key should not be older than 1 year
+                if current_timestamp - timestamp > 365 * 24 * 60 * 60:
+                    return False
+                    
+            except ValueError:
+                return False
+                
+            # Validate signature (should be at least 12 chars)
+            if len(signature) < 12:
+                return False
+                
+            # In a real implementation, you would:
+            # 1. Look up the API key in your database
+            # 2. Verify the signature using HMAC
+            # 3. Check if the key is active and not revoked
+            # 4. Check rate limits specific to this API key
+            
+            # For now, we'll validate the format and accept well-formed keys
+            return True
+            
+        except Exception:
+            return False

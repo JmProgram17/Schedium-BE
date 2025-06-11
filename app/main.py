@@ -1,72 +1,29 @@
 """
-Main application module.
-Configures FastAPI app with middleware, routes, and event handlers.
+FastAPI application entry point.
+Configures middleware, routes, and application lifecycle.
 """
 
-import logging
 import time
 from contextlib import asynccontextmanager
-from typing import Any, AsyncGenerator, Awaitable, Callable, Dict
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
-from fastapi.responses import JSONResponse
-from starlette.responses import Response
+from typing import AsyncGenerator, Awaitable, Callable
+
+from fastapi import FastAPI, Request, Response
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.v1.router import api_router
 from app.config import settings
-from app.core.auth_middleware import AuthenticationMiddleware
-from app.database import init_db
-from app.core.middleware import (
-    ErrorHandlerMiddleware,
-    LoggingMiddleware,
-    RequestIDMiddleware,
-)
+from app.core.logging import get_logger, setup_logging
+from app.core.middleware.error_handler import ErrorHandlerMiddleware
+from app.core.middleware.logging import LoggingMiddleware
+from app.core.middleware.request_id import RequestIDMiddleware
 from app.core.middleware.security import SecurityMiddleware
 from app.core.security.cors import configure_cors
 from app.core.security.headers import SecurityHeadersMiddleware
-from app.core.logging import setup_logging, get_logger
+from app.database import init_db
 
-# Configure logging first
+# Setup logging
 setup_logging()
 logger = get_logger(__name__)
-
-# Create app
-app = FastAPI(
-    title=settings.PROJECT_NAME,
-    version=settings.APP_VERSION,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    debug=settings.DEBUG,
-)
-
-# Middleware order is important!
-# 1. Request ID (needed by other middlewares)
-app.add_middleware(RequestIDMiddleware)
-
-# 2. Error handler (catches all exceptions)
-ErrorHandlerMiddleware(app)
-
-# 3. Security headers
-app.add_middleware(SecurityHeadersMiddleware)
-
-# 4. CORS
-configure_cors(app)
-
-# 5. Logging (logs all requests)
-app.add_middleware(LoggingMiddleware)
-
-# 6. Security (rate limiting, validation)
-app.add_middleware(SecurityMiddleware)
-
-# 7. Authentication (last, uses request state)
-app.add_middleware(AuthenticationMiddleware)
-
-# 8. Add trusted host check for production
-if settings.IS_PRODUCTION:
-    app.add_middleware(
-        TrustedHostMiddleware,
-        allowed_hosts=settings.ALLOWED_HOSTS,
-    )
 
 
 @asynccontextmanager
@@ -96,6 +53,7 @@ app = FastAPI(
     docs_url=f"{settings.API_V1_STR}/docs" if not settings.IS_PRODUCTION else None,
     redoc_url=f"{settings.API_V1_STR}/redoc" if not settings.IS_PRODUCTION else None,
     lifespan=lifespan,
+    debug=settings.DEBUG,
     # Security configurations
     swagger_ui_parameters={
         "persistAuthorization": True,
@@ -103,37 +61,31 @@ app = FastAPI(
     } if not settings.IS_PRODUCTION else None,
 )
 
-# Configure CORS with security
+# Middleware order is important!
+# 1. Request ID (needed by other middlewares)
+app.add_middleware(RequestIDMiddleware)
+
+# 2. Error handler (catches all exceptions)
+ErrorHandlerMiddleware(app)
+
+# 3. Security headers
+app.add_middleware(SecurityHeadersMiddleware)
+
+# 4. CORS
 configure_cors(app)
 
-# Add security middlewares in order
-app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(SecurityMiddleware)
+# 5. Logging (logs all requests)
 app.add_middleware(LoggingMiddleware)
-app.add_middleware(AuthenticationMiddleware)
 
-# Configure CORS
-if settings.BACKEND_CORS_ORIGINS:
+# 6. Security (rate limiting, validation)
+app.add_middleware(SecurityMiddleware)
+
+# 7. Add trusted host check for production
+if settings.IS_PRODUCTION:
     app.add_middleware(
-        CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+        TrustedHostMiddleware,
+        allowed_hosts=settings.ALLOWED_HOSTS,
     )
-
-app.add_middleware(AuthenticationMiddleware)
-
-# Add trusted host middleware for security
-app.add_middleware(
-    TrustedHostMiddleware,
-    allowed_hosts=["*"]
-    if settings.IS_DEVELOPMENT
-    else [
-        origin.replace("http://", "").replace("https://", "")
-        for origin in settings.BACKEND_CORS_ORIGINS
-    ],
-)
 
 
 # Add request timing middleware
@@ -149,80 +101,50 @@ async def add_process_time_header(
     return response
 
 
-# Add request ID middleware
-@app.middleware("http")
-async def add_request_id(
-    request: Request, call_next: Callable[[Request], Awaitable[Response]]
-) -> Response:
-    """Add unique request ID for tracking."""
-    import uuid
-
-    request_id = str(uuid.uuid4())
-    request.state.request_id = request_id
-    response = await call_next(request)
-    response.headers["X-Request-ID"] = request_id
-    return response
+# Include routers
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
-# Root endpoint
-@app.get("/")
-async def root() -> Dict[str, Any]:
-    """Root endpoint returning API information."""
-    return {
-        "name": settings.APP_NAME,
-        "version": settings.APP_VERSION,
-        "environment": settings.APP_ENV,
-        "docs": f"{settings.API_V1_STR}/docs" if not settings.IS_PRODUCTION else None,
-        "health": "/health",
-    }
-
-
-# Health check endpoint
-@app.get("/health")
-async def health_check() -> Dict[str, Any]:
+# Health check endpoints
+@app.get("/health", tags=["Health"])
+async def health_check():
     """
     Health check endpoint.
-    Returns application and database status.
+    Returns the current status of the API.
     """
-    from sqlalchemy import text
-
-    from app.database import engine
-
-    health_status = {
+    return {
         "status": "healthy",
         "app": {
             "name": settings.APP_NAME,
             "version": settings.APP_VERSION,
             "environment": settings.APP_ENV,
         },
+        "database": {"status": "connected"},
     }
 
-    # Check database connection
-    try:
-        with engine.connect() as conn:
-            conn.execute(text("SELECT 1"))
-        health_status["database"] = {"status": "connected"}
-    except Exception as e:
-        health_status["status"] = "unhealthy"
-        health_status["database"] = {"status": "disconnected", "error": str(e)}
 
-    return health_status
+@app.get("/", tags=["Root"])
+async def root():
+    """
+    Root endpoint.
+    Returns basic API information.
+    """
+    return {
+        "name": settings.APP_NAME,
+        "version": settings.APP_VERSION,
+        "environment": settings.APP_ENV,
+        "docs_url": f"{settings.API_V1_STR}/docs" if not settings.IS_PRODUCTION else None,
+        "redoc_url": f"{settings.API_V1_STR}/redoc" if not settings.IS_PRODUCTION else None,
+    }
 
 
-# Global exception handler
-@app.exception_handler(Exception)
-async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    """Handle uncaught exceptions."""
-    logger.error(f"Unhandled exception: {exc}", exc_info=True)
+if __name__ == "__main__":
+    import uvicorn
 
-    return JSONResponse(
-        status_code=500,
-        content={
-            "detail": "Internal server error" if settings.IS_PRODUCTION else str(exc),
-            "request_id": getattr(request.state, "request_id", None),
-        },
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=settings.DEBUG,
+        log_level="info",
     )
-
-
-# Include API routers
-app.include_router(api_router, prefix=settings.API_V1_STR)

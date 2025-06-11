@@ -91,6 +91,10 @@ class RateLimiter:
 
     async def check_rate_limit(self, request: Request) -> None:
         """Check rate limits and raise exception if exceeded."""
+        # Skip rate limiting in testing environment
+        if settings.APP_ENV == "testing" or not settings.RATE_LIMIT_ENABLED:
+            return
+            
         identifier = self._get_identifier(request)
 
         # Check minute limit

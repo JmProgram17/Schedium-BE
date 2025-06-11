@@ -72,7 +72,7 @@ class SecurityUtils:
         to_encode.update({"exp": expire, "iat": datetime.utcnow(), "type": "access"})
 
         encoded_jwt = jwt.encode(
-            to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+            to_encode, settings.SECRET_KEY, algorithm="HS256"
         )
 
         return encoded_jwt
@@ -110,7 +110,7 @@ class SecurityUtils:
         )
 
         encoded_jwt = jwt.encode(
-            to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
+            to_encode, settings.SECRET_KEY, algorithm="HS256"
         )
 
         return encoded_jwt
@@ -131,7 +131,7 @@ class SecurityUtils:
         """
         try:
             payload = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+                token, settings.SECRET_KEY, algorithms=["HS256"]
             )
             return payload
         except JWTError:

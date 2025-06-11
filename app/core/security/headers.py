@@ -56,8 +56,8 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             "default-src 'self'",
             "img-src 'self' data: https:",
             "font-src 'self' https: data:",
-            "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  # For OpenAPI
-            "style-src 'self' 'unsafe-inline' https:",
+            "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net",  # For OpenAPI
+            "style-src 'self' 'unsafe-inline' https: https://cdn.jsdelivr.net",
             "frame-ancestors 'none'",
             "base-uri 'self'",
             "form-action 'self'",
