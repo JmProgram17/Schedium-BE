@@ -15,7 +15,10 @@ services:
       - "${DB_PORT:-3306}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+      - ./scripts/database/01-database-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./scripts/database/02-initial-data.sql:/docker-entrypoint-initdb.d/02-data.sql:ro
+      - ./scripts/database/03-triggers.sql:/docker-entrypoint-initdb.d/03-triggers.sql:ro
+      - ./scripts/database/04-views.sql:/docker-entrypoint-initdb.d/04-views.sql:ro
     networks:
       - schedium-network
     command: >
